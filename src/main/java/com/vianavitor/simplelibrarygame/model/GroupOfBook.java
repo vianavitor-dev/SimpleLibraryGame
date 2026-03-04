@@ -1,0 +1,57 @@
+package com.vianavitor.simplelibrarygame.model;
+
+import com.vianavitor.simplelibrarygame.utils.GroupOfBooksCompKey;
+import jakarta.persistence.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "group_book")
+public class GroupOfBook {
+    @EmbeddedId
+    private GroupOfBooksCompKey id;
+
+    @ManyToOne
+    @MapsId("groupId")
+    @JoinColumn(name = "group_id")
+    private Group groups;
+
+    @ManyToOne
+    @MapsId("bookId")
+    @JoinColumn(name = "book_id")
+    private Book books;
+
+    private LocalDate createdAt;
+
+    public GroupOfBooksCompKey getId() {
+        return id;
+    }
+
+    public void setId(GroupOfBooksCompKey id) {
+        this.id = id;
+    }
+
+    public Group getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Group groups) {
+        this.groups = groups;
+    }
+
+    public Book getBooks() {
+        return books;
+    }
+
+    public void setBooks(Book books) {
+        this.books = books;
+    }
+
+    public LocalDate getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDate createdAt) {
+        this.createdAt = createdAt;
+    }
+}
