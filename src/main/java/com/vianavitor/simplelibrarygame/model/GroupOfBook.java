@@ -14,12 +14,12 @@ public class GroupOfBook {
     @ManyToOne
     @MapsId("groupId")
     @JoinColumn(name = "group_id")
-    private Group groups;
+    private Group group;
 
     @ManyToOne
     @MapsId("bookId")
     @JoinColumn(name = "book_id")
-    private Book books;
+    private Book book;
 
     private LocalDate createdAt;
 
@@ -32,19 +32,19 @@ public class GroupOfBook {
     }
 
     public Group getGroups() {
-        return groups;
+        return group;
     }
 
-    public void setGroups(Group groups) {
-        this.groups = groups;
+    public void setGroups(Group group) {
+        this.group = group;
     }
 
     public Book getBooks() {
-        return books;
+        return book;
     }
 
-    public void setBooks(Book books) {
-        this.books = books;
+    public void setBooks(Book book) {
+        this.book = book;
     }
 
     public LocalDate getCreatedAt() {
