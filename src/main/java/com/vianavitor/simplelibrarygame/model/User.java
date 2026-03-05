@@ -3,7 +3,8 @@ package com.vianavitor.simplelibrarygame.model;
 import jakarta.persistence.*;
 
 @Entity
-@DiscriminatorColumn(discriminatorType = DiscriminatorType.CHAR)
+@DiscriminatorColumn(discriminatorType = DiscriminatorType.CHAR, name = "type")
+@DiscriminatorValue("0")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

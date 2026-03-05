@@ -11,7 +11,7 @@ public class Author {
     private Long id;
     private String name;
 
-    @ManyToMany(mappedBy = "book_author")
+    @ManyToMany(mappedBy = "bookAuthors")
     private List<Book> books;
 
     public Long getId() {

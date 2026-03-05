@@ -23,7 +23,7 @@ public class Book {
             joinColumns = @JoinColumn(name = "book_id"),
             inverseJoinColumns = @JoinColumn(name = "author_id")
     )
-    private List<Author> authors;
+    private List<Author> bookAuthors;
 
     @ManyToMany
     @JoinTable(
@@ -31,7 +31,7 @@ public class Book {
             joinColumns = @JoinColumn(name = "book_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
-    private List<Genre> genres;
+    private List<Genre> bookGenres;
 
     @Nullable
     private String imagePath;
@@ -44,39 +44,39 @@ public class Book {
     @Enumerated(EnumType.STRING)
     private Language language;
 
-    @Column(columnDefinition = "0")
-    private short lastPageRead;
+    @Column(columnDefinition = "int default 0")
+    private int lastPageRead;
 
-    @Column(columnDefinition = "0")
-    private short reportedCount;
+    @Column(columnDefinition = "int default 0")
+    private int reportedCount;
 
-    @Column(columnDefinition = "0")
-    private short pageCount;
+    @Column(columnDefinition = "int default 0")
+    private int pageCount;
 
-    @Column(columnDefinition = "0")
+    @Column(columnDefinition = "double default 0")
     private double ratingValue;
 
-    @Column(columnDefinition = "0")
+    @Column(columnDefinition = "int default 0")
     private int ratingCount;
 
-    @Column(columnDefinition = "1")
+    @Column(columnDefinition = "int default 1")
     private int quantity;
     private boolean active = true;
 
     public List<Author> getAuthors() {
-        return authors;
+        return bookAuthors;
     }
 
     public void setAuthors(List<Author> authors) {
-        this.authors = authors;
+        this.bookAuthors = authors;
     }
 
     public List<Genre> getGenrer() {
-        return genres;
+        return bookGenres;
     }
 
-    public void setGenrer(List<Genre> genres) {
-        this.genres = genres;
+    public void setGenrer(List<Genre> bookGenres) {
+        this.bookGenres = bookGenres;
     }
 
     public Long getId() {
@@ -146,27 +146,27 @@ public class Book {
         this.language = language;
     }
 
-    public short getLastPageRead() {
+    public int getLastPageRead() {
         return lastPageRead;
     }
 
-    public void setLastPageRead(short lastPageRead) {
+    public void setLastPageRead(int lastPageRead) {
         this.lastPageRead = lastPageRead;
     }
 
-    public short getReportedCount() {
+    public int getReportedCount() {
         return reportedCount;
     }
 
-    public void setReportedCount(short reportedCount) {
+    public void setReportedCount(int reportedCount) {
         this.reportedCount = reportedCount;
     }
 
-    public short getPageCount() {
+    public int getPageCount() {
         return pageCount;
     }
 
-    public void setPageCount(short pageCount) {
+    public void setPageCount(int pageCount) {
         this.pageCount = pageCount;
     }
 
