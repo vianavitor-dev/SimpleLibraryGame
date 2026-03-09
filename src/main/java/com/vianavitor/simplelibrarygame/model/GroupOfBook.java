@@ -1,15 +1,14 @@
 package com.vianavitor.simplelibrarygame.model;
 
-import com.vianavitor.simplelibrarygame.utils.GroupOfBooksCompKey;
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "group_book")
 public class GroupOfBook {
-    @EmbeddedId
-    private GroupOfBooksCompKey id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
     @MapsId("groupId")
@@ -23,11 +22,11 @@ public class GroupOfBook {
 
     private LocalDate createdAt;
 
-    public GroupOfBooksCompKey getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(GroupOfBooksCompKey id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

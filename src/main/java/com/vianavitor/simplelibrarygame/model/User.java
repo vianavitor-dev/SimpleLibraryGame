@@ -1,10 +1,11 @@
 package com.vianavitor.simplelibrarygame.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.DiscriminatorOptions;
 
 @Entity
-@DiscriminatorColumn(discriminatorType = DiscriminatorType.CHAR, name = "type")
-@DiscriminatorValue("0")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(discriminatorType = DiscriminatorType.STRING, name = "type")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
-import com.vianavitor.simplelibrarygame.utils.Language;
+import com.vianavitor.simplelibrarygame.utils.ReadingLevel;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 
@@ -39,16 +39,6 @@ public class Book {
     @Nullable
     private String contentPath;
     private LocalDate releasedAt;
-    private String publishedBy;
-
-    @Enumerated(EnumType.STRING)
-    private Language language;
-
-    @Column(columnDefinition = "int default 0")
-    private int lastPageRead;
-
-    @Column(columnDefinition = "int default 0")
-    private int reportedCount;
 
     @Column(columnDefinition = "int default 0")
     private int pageCount;
@@ -61,23 +51,12 @@ public class Book {
 
     @Column(columnDefinition = "int default 1")
     private int quantity;
-    private boolean active = true;
 
-    public List<Author> getAuthors() {
-        return bookAuthors;
-    }
+    @Enumerated(EnumType.STRING)
+    private ReadingLevel difficultLevel;
 
-    public void setAuthors(List<Author> authors) {
-        this.bookAuthors = authors;
-    }
-
-    public List<Genre> getGenrer() {
-        return bookGenres;
-    }
-
-    public void setGenrer(List<Genre> bookGenres) {
-        this.bookGenres = bookGenres;
-    }
+    @Column(columnDefinition = "bit 1")
+    private boolean available;
 
     public Long getId() {
         return id;
@@ -104,6 +83,22 @@ public class Book {
         this.description = description;
     }
 
+    public List<Author> getBookAuthors() {
+        return bookAuthors;
+    }
+
+    public void setBookAuthors(List<Author> bookAuthors) {
+        this.bookAuthors = bookAuthors;
+    }
+
+    public List<Genre> getBookGenres() {
+        return bookGenres;
+    }
+
+    public void setBookGenres(List<Genre> bookGenres) {
+        this.bookGenres = bookGenres;
+    }
+
     @Nullable
     public String getImagePath() {
         return imagePath;
@@ -128,38 +123,6 @@ public class Book {
 
     public void setReleasedAt(LocalDate releasedAt) {
         this.releasedAt = releasedAt;
-    }
-
-    public String getPublishedBy() {
-        return publishedBy;
-    }
-
-    public void setPublishedBy(String publishedBy) {
-        this.publishedBy = publishedBy;
-    }
-
-    public Language getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(Language language) {
-        this.language = language;
-    }
-
-    public int getLastPageRead() {
-        return lastPageRead;
-    }
-
-    public void setLastPageRead(int lastPageRead) {
-        this.lastPageRead = lastPageRead;
-    }
-
-    public int getReportedCount() {
-        return reportedCount;
-    }
-
-    public void setReportedCount(int reportedCount) {
-        this.reportedCount = reportedCount;
     }
 
     public int getPageCount() {
@@ -194,11 +157,19 @@ public class Book {
         this.quantity = quantity;
     }
 
-    public boolean isActive() {
-        return active;
+    public ReadingLevel getDifficultLevel() {
+        return difficultLevel;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setDifficultLevel(ReadingLevel difficultLevel) {
+        this.difficultLevel = difficultLevel;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 }
