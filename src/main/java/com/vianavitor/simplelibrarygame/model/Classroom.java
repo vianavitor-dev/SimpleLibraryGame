@@ -3,16 +3,17 @@ package com.vianavitor.simplelibrarygame.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "`group`")
-public class Group {
+@Table(name = "classroom")
+public class Classroom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique = true)
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private Student student;
+    @Column(unique = true)
+    private String publicCode;
 
     public Long getId() {
         return id;
@@ -30,11 +31,11 @@ public class Group {
         this.name = name;
     }
 
-    public Student getStudent() {
-        return student;
+    public String getPublicCode() {
+        return publicCode;
     }
 
-    public void setStudent(Student student) {
-        this.student = student;
+    public void setPublicCode(String publicCode) {
+        this.publicCode = publicCode;
     }
 }

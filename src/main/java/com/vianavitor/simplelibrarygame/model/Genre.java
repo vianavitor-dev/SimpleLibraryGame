@@ -2,7 +2,9 @@ package com.vianavitor.simplelibrarygame.model;
 
 import jakarta.persistence.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 public class Genre {
@@ -13,6 +15,9 @@ public class Genre {
 
     @ManyToMany(mappedBy = "bookGenres")
     private List<Book> books;
+
+    @ManyToMany(mappedBy = "favoriteGenre")
+    private Set<Student> students = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -36,5 +41,13 @@ public class Genre {
 
     public void setBooks(List<Book> books) {
         this.books = books;
+    }
+
+    public Set<Student> getStudents() {
+        return students;
+    }
+
+    public void setStudents(Set<Student> students) {
+        this.students = students;
     }
 }

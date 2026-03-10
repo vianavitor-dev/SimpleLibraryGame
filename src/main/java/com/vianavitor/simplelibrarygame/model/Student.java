@@ -1,20 +1,38 @@
 package com.vianavitor.simplelibrarygame.model;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @DiscriminatorValue("student")
 public class Student extends User {
-    @ManyToOne
-    @JoinColumn(name = "student_level_status_id")
-    private StudentLvlStatus status;
+    @OneToOne
+    @JoinColumn(name = "student_status")
+    private StudentStatus status;
 
-    public StudentLvlStatus getStatus() {
+    @ManyToMany
+    @JoinTable(
+            name = "user_favorite_genre",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private Set<Genre> favoriteGenre = new HashSet<>();
+
+    public StudentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(StudentLvlStatus status) {
+    public void setStatus(StudentStatus status) {
         this.status = status;
+    }
+
+    public Set<Genre> getFavoriteGenre() {
+        return favoriteGenre;
+    }
+
+    public void setFavoriteGenre(Set<Genre> favoriteGenre) {
+        this.favoriteGenre = favoriteGenre;
     }
 }

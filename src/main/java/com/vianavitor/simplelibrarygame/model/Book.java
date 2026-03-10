@@ -5,7 +5,8 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Book {
@@ -15,7 +16,7 @@ public class Book {
     private String title;
 
     @Nullable
-    private String description;
+    private String synopsis;
 
     @ManyToMany
     @JoinTable(
@@ -23,7 +24,7 @@ public class Book {
             joinColumns = @JoinColumn(name = "book_id"),
             inverseJoinColumns = @JoinColumn(name = "author_id")
     )
-    private List<Author> bookAuthors;
+    private Set<Author> bookAuthors = new HashSet<>();
 
     @ManyToMany
     @JoinTable(
@@ -31,7 +32,7 @@ public class Book {
             joinColumns = @JoinColumn(name = "book_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
-    private List<Genre> bookGenres;
+    private Set<Genre> bookGenres = new HashSet<>();
 
     @Nullable
     private String imagePath;
@@ -40,22 +41,23 @@ public class Book {
     private String contentPath;
     private LocalDate releasedAt;
 
-    @Column(columnDefinition = "int default 0")
+    @Column(columnDefinition = "int not null default 0")
     private int pageCount;
 
-    @Column(columnDefinition = "double default 0")
+    @Column(columnDefinition = "double not null default 0.0")
     private double ratingValue;
 
-    @Column(columnDefinition = "int default 0")
+    @Column(columnDefinition = "int not null default 0")
     private int ratingCount;
 
-    @Column(columnDefinition = "int default 1")
+    @Column(columnDefinition = "int not null default 1")
     private int quantity;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private ReadingLevel difficultLevel;
 
-    @Column(columnDefinition = "bit 1")
+    @Column(columnDefinition = "bit(1) not null default b'1'")
     private boolean available;
 
     public Long getId() {
@@ -76,26 +78,26 @@ public class Book {
 
     @Nullable
     public String getDescription() {
-        return description;
+        return synopsis;
     }
 
-    public void setDescription(@Nullable String description) {
-        this.description = description;
+    public void setDescription(@Nullable String synopsis) {
+        this.synopsis = synopsis;
     }
 
-    public List<Author> getBookAuthors() {
+    public Set<Author> getBookAuthors() {
         return bookAuthors;
     }
 
-    public void setBookAuthors(List<Author> bookAuthors) {
+    public void setBookAuthors(Set<Author> bookAuthors) {
         this.bookAuthors = bookAuthors;
     }
 
-    public List<Genre> getBookGenres() {
+    public Set<Genre> getBookGenres() {
         return bookGenres;
     }
 
-    public void setBookGenres(List<Genre> bookGenres) {
+    public void setBookGenres(Set<Genre> bookGenres) {
         this.bookGenres = bookGenres;
     }
 
