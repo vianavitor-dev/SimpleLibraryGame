@@ -20,6 +20,7 @@ public class GroupOfBook {
     @JoinColumn(name = "book_id")
     private Book book;
 
+    @Column(columnDefinition = "date not null default (current_date())")
     private LocalDate createdAt;
 
     public GroupOfBookId getId() {

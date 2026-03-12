@@ -1,6 +1,5 @@
 package com.vianavitor.simplelibrarygame.model;
 
-import com.vianavitor.simplelibrarygame.model.utils.classes.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -14,7 +13,7 @@ public class BookSummary {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private Student student;
 
     @ManyToOne
     @JoinColumn(name = "book_id")
@@ -33,12 +32,12 @@ public class BookSummary {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Student getUser() {
+        return student;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUser(Student student) {
+        this.student = student;
     }
 
     public Book getBook() {
