@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -7,9 +8,8 @@ import java.util.Set;
 
 @Entity
 @DiscriminatorValue("student")
-public class Student extends User {
-    @OneToOne
-    @JoinColumn(name = "student_status")
+public class Student extends UserClassroom {
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
     private StudentStatus status;
 
     @ManyToMany

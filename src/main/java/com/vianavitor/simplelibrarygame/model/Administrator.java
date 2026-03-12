@@ -1,6 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
-import jakarta.persistence.DiscriminatorColumn;
+import com.vianavitor.simplelibrarygame.model.utils.classes.User;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 

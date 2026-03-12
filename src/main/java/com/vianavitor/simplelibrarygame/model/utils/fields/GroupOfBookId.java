@@ -1,4 +1,4 @@
-package com.vianavitor.simplelibrarygame.utils;
+package com.vianavitor.simplelibrarygame.model.utils.fields;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

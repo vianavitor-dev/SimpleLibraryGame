@@ -1,6 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
-import com.vianavitor.simplelibrarygame.utils.ReadingLevel;
+import com.vianavitor.simplelibrarygame.model.utils.fields.ReadingLevel;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 

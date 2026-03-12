@@ -1,6 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
-import com.vianavitor.simplelibrarygame.utils.GroupOfBookId;
+import com.vianavitor.simplelibrarygame.model.utils.fields.GroupOfBookId;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 

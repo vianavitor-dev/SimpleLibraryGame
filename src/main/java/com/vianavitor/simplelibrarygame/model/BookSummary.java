@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.vianavitor.simplelibrarygame.model.utils.classes.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 @Entity
 public class StudentStatus {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Nullable
@@ -15,6 +14,7 @@ public class StudentStatus {
     private BookReadHistory currentBook;    // it saves only the history of the last book read by the user
 
     @OneToOne
+    @MapsId
     @JoinColumn(name = "user_id")
     private Student student;
 

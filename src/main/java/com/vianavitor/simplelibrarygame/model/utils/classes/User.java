@@ -1,8 +1,6 @@
-package com.vianavitor.simplelibrarygame.model;
+package com.vianavitor.simplelibrarygame.model.utils.classes;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.annotations.DiscriminatorOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
