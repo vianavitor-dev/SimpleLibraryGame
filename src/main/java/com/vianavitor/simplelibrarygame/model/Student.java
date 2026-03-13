@@ -10,7 +10,7 @@ import java.util.Set;
 @DiscriminatorValue("student")
 public class Student extends UserClassroom {
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
-    private StudentStatus status;
+    private StudentStats stats;
 
     @ManyToMany
     @JoinTable(
@@ -20,12 +20,12 @@ public class Student extends UserClassroom {
     )
     private Set<Genre> favoriteGenre = new HashSet<>();
 
-    public StudentStatus getStatus() {
-        return status;
+    public StudentStats getStats() {
+        return stats;
     }
 
-    public void setStatus(StudentStatus status) {
-        this.status = status;
+    public void setStats(StudentStats stats) {
+        this.stats = stats;
     }
 
     public Set<Genre> getFavoriteGenre() {

@@ -4,7 +4,7 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 
 @Entity
-public class StudentStatus {
+public class StudentStats {
     @Id
     private Long id;
 
