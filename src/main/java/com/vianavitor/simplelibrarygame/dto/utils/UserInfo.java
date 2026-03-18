@@ -1,6 +1,6 @@
 package com.vianavitor.simplelibrarygame.dto.utils;
 
-public record UserIdAndHashPasswd(
+public record UserInfo(
         Long id,
         String password
 ) {

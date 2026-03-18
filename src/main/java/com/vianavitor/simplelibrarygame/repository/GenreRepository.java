@@ -3,6 +3,7 @@ package com.vianavitor.simplelibrarygame.repository;
 import com.vianavitor.simplelibrarygame.model.Genre;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,5 +15,5 @@ public interface GenreRepository extends org.springframework.data.repository.Rep
 
     Optional<Genre> findById(Long id);
 
-    List<Genre> findByName(String name);
+    Optional<Genre> findByName(String name);
 }

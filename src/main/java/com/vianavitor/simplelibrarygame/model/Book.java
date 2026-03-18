@@ -18,7 +18,7 @@ public class Book {
     @Nullable
     private String synopsis;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "book_author",
             joinColumns = @JoinColumn(name = "book_id"),
@@ -26,7 +26,7 @@ public class Book {
     )
     private Set<Author> bookAuthors = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "book_genre",
             joinColumns = @JoinColumn(name = "book_id"),
@@ -37,8 +37,8 @@ public class Book {
     @Nullable
     private String imagePath;
 
-    @Nullable
-    private String contentPath;
+//    @Nullable
+//    private String contentPath;
     private LocalDate releasedAt;
 
     @Column(columnDefinition = "int not null default 0")
@@ -77,11 +77,11 @@ public class Book {
     }
 
     @Nullable
-    public String getDescription() {
+    public String getSynopsis() {
         return synopsis;
     }
 
-    public void setDescription(@Nullable String synopsis) {
+    public void setSynopsis(@Nullable String synopsis) {
         this.synopsis = synopsis;
     }
 
@@ -110,14 +110,14 @@ public class Book {
         this.imagePath = imagePath;
     }
 
-    @Nullable
-    public String getContentPath() {
-        return contentPath;
-    }
-
-    public void setContentPath(@Nullable String contentPath) {
-        this.contentPath = contentPath;
-    }
+//    @Nullable
+//    public String getContentPath() {
+//        return contentPath;
+//    }
+//
+//    public void setContentPath(@Nullable String contentPath) {
+//        this.contentPath = contentPath;
+//    }
 
     public LocalDate getReleasedAt() {
         return releasedAt;
