@@ -6,9 +6,11 @@ import com.vianavitor.simplelibrarygame.model.Student;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface BookReadHistoryRepository extends CrudRepository<BookReadHistory, Long> {
-    void findByBook(Book book);
+    List<BookReadHistory> findByBook(Book book);
 
-    void findByStudent(Student student);
+    List<BookReadHistory> findByStudent(Student student);
 }

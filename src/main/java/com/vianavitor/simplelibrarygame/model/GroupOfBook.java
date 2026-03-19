@@ -31,19 +31,19 @@ public class GroupOfBook {
         this.id = id;
     }
 
-    public Group getGroups() {
+    public Group getGroup() {
         return group;
     }
 
-    public void setGroups(Group group) {
+    public void setGroup(Group group) {
         this.group = group;
     }
 
-    public Book getBooks() {
+    public Book getBook() {
         return book;
     }
 
-    public void setBooks(Book book) {
+    public void setBook(Book book) {
         this.book = book;
     }
 

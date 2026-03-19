@@ -51,8 +51,7 @@ public class StudentService implements ManageableUser<Student> {
                     throw new RuntimeException("not found classroom");
                 });
 
-        // TODO: insert student's favorite genre
-        // ...
+        newStudent.setFavoriteGenre(favoriteGenres);
 
         Student student = this.register(newStudent);
 
