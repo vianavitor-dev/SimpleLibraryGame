@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -34,16 +35,16 @@ public class LibrarianService implements ManageableUser<Librarian> {
 
     @Override
     public Long login(String username, String password) {
-        UserInfo userInfo = repository.getIdAndPasswordByUsername(username)
+        Librarian librarian = (Librarian) repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("invalid username or password"));
 
-        boolean invalidPassword = encoder.matches(password, userInfo.password());
+        boolean invalidPassword = encoder.matches(password, librarian.getPassword());
 
         if (invalidPassword) {
             throw new RuntimeException("invalid username or password");
         }
 
-        boolean wasUserDeactivated = userInfo.active();
+        boolean wasUserDeactivated = librarian.isActive();
         if (wasUserDeactivated) {
             throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
         }
@@ -51,7 +52,10 @@ public class LibrarianService implements ManageableUser<Librarian> {
         // TODO: create JWT Token for authentication
         // ...
 
-        return userInfo.id();
+        librarian.setLastLogin(LocalDate.now());
+        repository.save(librarian);
+
+        return librarian.getId();
     }
 
     public List<Librarian> getAll() {

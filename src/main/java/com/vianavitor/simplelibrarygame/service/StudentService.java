@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -75,16 +76,16 @@ public class StudentService implements ManageableUser<Student> {
 
     @Override
     public Long login(String username, String password) {
-        UserInfo userInfo = repository.getIdAndPasswordByUsername(username)
+        Student student = (Student) repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("invalid username or password"));
 
-        boolean invalidPassword = encoder.matches(password, userInfo.password());
+        boolean invalidPassword = encoder.matches(password, student.getPassword());
 
         if (invalidPassword) {
             throw new RuntimeException("invalid username or password");
         }
 
-        boolean wasUserDeactivated = userInfo.active();
+        boolean wasUserDeactivated = student.isActive();
         if (wasUserDeactivated) {
             throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
         }
@@ -92,7 +93,10 @@ public class StudentService implements ManageableUser<Student> {
         // TODO: create JWT Token for authentication
         // ...
 
-        return userInfo.id();
+        student.setLastLogin(LocalDate.now());
+        repository.save(student);
+
+        return student.getId();
     }
 
     public List<Student> getAll() {
