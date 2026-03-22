@@ -2,6 +2,7 @@ package com.vianavitor.simplelibrarygame.model;
 
 import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import jakarta.persistence.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,6 +20,14 @@ public class Student extends UserClassroom {
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
     private Set<Genre> favoriteGenre = new HashSet<>();
+
+    @Autowired
+    public Student() {
+    }
+
+    public Student(String username, String password) {
+        super(username, password);
+    }
 
     public StudentStats getStats() {
         return stats;

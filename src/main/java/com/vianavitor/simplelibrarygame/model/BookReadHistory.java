@@ -21,8 +21,8 @@ public class BookReadHistory {
     @Column(columnDefinition = "int not null default 0")
     private int lastPageRead;
 
-    @Column(columnDefinition = "date not null default (current_date())")
-    private LocalDate lastUpdate;
+    @Column(nullable = false)
+    private LocalDate lastUpdate = LocalDate.now();
 
     public Long getId() {
         return id;

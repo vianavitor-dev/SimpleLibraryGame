@@ -6,10 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-// TODO: implements auxiliary classes that gives support to the bidirectional relationship
 @Repository
 public interface BookRepository extends CrudRepository<Book, Long> {
     boolean existsByTitle(String title);
 
+    // TODO: make it search for similar titles instead of the exactly title
     List<Book> findByTitle(String title);
 }

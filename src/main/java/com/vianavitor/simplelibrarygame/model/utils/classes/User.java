@@ -1,6 +1,8 @@
 package com.vianavitor.simplelibrarygame.model.utils.classes;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
@@ -19,10 +21,10 @@ public abstract class User {
     private String username;
     private String password;
 
-    @Column(columnDefinition = "date not null default (current_date())")
+    @Column(columnDefinition = "date default (current_date())")
     private LocalDate lastLogin;
 
-    @Column(columnDefinition = "bit(1) not null default b'1'")
+    @Column(columnDefinition = "bit default b'1'", nullable = false)
     private boolean active;
 
     @Autowired
@@ -31,6 +33,7 @@ public abstract class User {
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+        this.active = true;
     }
 
     public Long getId() {

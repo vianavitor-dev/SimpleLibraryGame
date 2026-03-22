@@ -2,6 +2,7 @@ package com.vianavitor.simplelibrarygame.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -14,7 +15,7 @@ public class Author {
     private String name;
 
     @ManyToMany(mappedBy = "bookAuthors")
-    private List<Book> books;
+    private List<Book> books = new ArrayList<>();
 
     public Long getId() {
         return id;

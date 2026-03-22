@@ -49,7 +49,7 @@ public class ProfessorService implements ManageableUser<Professor> {
             throw new RuntimeException("invalid username or password");
         }
 
-        boolean wasUserDeactivated = repository.getActiveById(userInfo.id());
+        boolean wasUserDeactivated = userInfo.active();
         if (wasUserDeactivated) {
             throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
         }

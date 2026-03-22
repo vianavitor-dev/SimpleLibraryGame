@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,6 +19,14 @@ public abstract class UserClassroom extends User {
             inverseJoinColumns = @JoinColumn(name = "classroom_id")
     )
     private Set<Classroom> classrooms = new HashSet<>();
+
+    @Autowired
+    public UserClassroom() {
+    }
+
+    public UserClassroom(String username, String password) {
+        super(username, password);
+    }
 
     public Set<Classroom> getClassrooms() {
         return classrooms;

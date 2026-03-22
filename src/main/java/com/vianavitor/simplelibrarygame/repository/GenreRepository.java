@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 // read only
-// TODO: implements auxiliary classes that gives support to the bidirectional relationship
 @Repository
 public interface GenreRepository extends org.springframework.data.repository.Repository<Genre, Long> {
     List<Genre> findAll();
