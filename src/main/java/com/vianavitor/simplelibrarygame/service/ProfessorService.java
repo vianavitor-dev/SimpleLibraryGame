@@ -2,6 +2,7 @@ package com.vianavitor.simplelibrarygame.service;
 
 import com.vianavitor.simplelibrarygame.dto.utils.UserInfo;
 import com.vianavitor.simplelibrarygame.model.Professor;
+import com.vianavitor.simplelibrarygame.repository.ClassroomRepository;
 import com.vianavitor.simplelibrarygame.repository.ProfessorRepository;
 import com.vianavitor.simplelibrarygame.service.utils.ManageableUser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,9 @@ import java.util.List;
 public class ProfessorService implements ManageableUser<Professor> {
     @Autowired
     private ProfessorRepository repository;
+
+    @Autowired
+    private ClassroomRepository classroomRepository;
     
     @Autowired
     private PasswordEncoder encoder;
@@ -34,9 +38,14 @@ public class ProfessorService implements ManageableUser<Professor> {
     }
 
     public void register(Professor newProfessor, String classroomCode) {
+        classroomRepository.findByPublicCode(classroomCode)
+                .ifPresentOrElse((classroom ->
+                        newProfessor.getClassrooms().add(classroom)
+                ), () -> {
+                    throw new RuntimeException("not found classroom");
+                });
+
         this.register(newProfessor);
-        // TODO: enroll student in classroom
-        // ...
     }
 
     @Override
@@ -44,13 +53,13 @@ public class ProfessorService implements ManageableUser<Professor> {
         Professor professor = (Professor) repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("invalid username or password"));
 
-        boolean invalidPassword = encoder.matches(password, professor.getPassword());
+        boolean invalidPassword = !encoder.matches(password, professor.getPassword());
 
         if (invalidPassword) {
             throw new RuntimeException("invalid username or password");
         }
 
-        boolean wasUserDeactivated = professor.isActive();
+        boolean wasUserDeactivated = !professor.isActive();
         if (wasUserDeactivated) {
             throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
         }
@@ -64,7 +73,7 @@ public class ProfessorService implements ManageableUser<Professor> {
         return professor.getId();
     }
 
-    private List<Professor> getAll() {
+    public List<Professor> getAll() {
         return (List<Professor>) repository.findAll();
     }
 

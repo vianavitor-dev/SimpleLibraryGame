@@ -38,13 +38,13 @@ public class LibrarianService implements ManageableUser<Librarian> {
         Librarian librarian = (Librarian) repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("invalid username or password"));
 
-        boolean invalidPassword = encoder.matches(password, librarian.getPassword());
+        boolean invalidPassword = !encoder.matches(password, librarian.getPassword());
 
         if (invalidPassword) {
             throw new RuntimeException("invalid username or password");
         }
 
-        boolean wasUserDeactivated = librarian.isActive();
+        boolean wasUserDeactivated = !librarian.isActive();
         if (wasUserDeactivated) {
             throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
         }

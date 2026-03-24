@@ -30,6 +30,24 @@ public class StudentService implements ManageableUser<Student> {
     @Autowired
     private PasswordEncoder encoder;
 
+    @Autowired
+    private StudentStats stats;
+
+    @Autowired
+    public StudentService() {}
+
+    public StudentService(
+            StudentRepository repository, StudentStatsRepository statsRepository,
+            ClassroomRepository classroomRepository, PasswordEncoder encoder,
+            StudentStats stats
+    ) {
+        this.repository = repository;
+        this.statsRepository = statsRepository;
+        this.classroomRepository = classroomRepository;
+        this.encoder = encoder;
+        this.stats = stats;
+    }
+
     @Override
     public Student register(Student entity) {
         boolean studentExists = repository.existsByUsername(entity.getUsername());
@@ -53,17 +71,19 @@ public class StudentService implements ManageableUser<Student> {
                 });
 
         newStudent.setFavoriteGenre(favoriteGenres);
-
         Student student = this.register(newStudent);
+
+        stats.setUser(student);
+        stats = statsRepository.save(stats);
+
+        student.setStats(stats);
+        repository.save(student);
 
 //        boolean exists = statsRepository.existsById(student.getId());
 //        if (exists) {
 //            throw new RuntimeException("student stats already exists");
 //        }
 //
-        StudentStats stats = new StudentStats();
-        statsRepository.save(stats);
-
     }
 
     public StudentStats getStats(Long id) {
@@ -79,13 +99,13 @@ public class StudentService implements ManageableUser<Student> {
         Student student = (Student) repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("invalid username or password"));
 
-        boolean invalidPassword = encoder.matches(password, student.getPassword());
+        boolean invalidPassword = !encoder.matches(password, student.getPassword());
 
         if (invalidPassword) {
             throw new RuntimeException("invalid username or password");
         }
 
-        boolean wasUserDeactivated = student.isActive();
+        boolean wasUserDeactivated = !student.isActive();
         if (wasUserDeactivated) {
             throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
         }

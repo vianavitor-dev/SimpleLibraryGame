@@ -21,13 +21,13 @@ public class AdministratorService {
         Administrator administrator = (Administrator) repository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("invalid username or password"));
 
-        boolean invalidPassword = encoder.matches(password, administrator.getPassword());
+        boolean invalidPassword = !encoder.matches(password, administrator.getPassword());
 
         if (invalidPassword) {
             throw new RuntimeException("invalid username or password");
         }
 
-        boolean wasUserDeactivated = administrator.isActive();
+        boolean wasUserDeactivated = !administrator.isActive();
         if (wasUserDeactivated) {
             throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
         }
