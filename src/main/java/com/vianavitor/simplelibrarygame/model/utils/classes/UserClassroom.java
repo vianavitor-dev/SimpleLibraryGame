@@ -12,12 +12,7 @@ import java.util.Set;
 
 @Entity
 public abstract class UserClassroom extends User {
-    @ManyToMany
-    @JoinTable(
-            name = "user_classroom",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "classroom_id")
-    )
+    @ManyToMany(mappedBy = "usersInClassroom")
     private Set<Classroom> classrooms = new HashSet<>();
 
     @Autowired

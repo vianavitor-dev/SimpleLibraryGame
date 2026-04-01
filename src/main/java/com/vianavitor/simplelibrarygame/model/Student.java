@@ -10,7 +10,7 @@ import java.util.Set;
 @Entity
 @DiscriminatorValue("student")
 public class Student extends UserClassroom {
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private StudentStats stats;
 
     @ManyToMany

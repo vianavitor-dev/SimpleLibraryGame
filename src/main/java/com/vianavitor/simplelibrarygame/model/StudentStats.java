@@ -13,7 +13,7 @@ public class StudentStats {
     @JoinColumn(name = "book_read_hisory_id")
     private BookReadHistory currentBook;    // it saves only the history of the last book read by the user
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.PERSIST)
     @MapsId
     @JoinColumn(name = "user_id")
     private Student student;

@@ -6,6 +6,7 @@ import com.vianavitor.simplelibrarygame.model.Student;
 import com.vianavitor.simplelibrarygame.repository.BookReadHistoryRepository;
 import com.vianavitor.simplelibrarygame.repository.BookRepository;
 import com.vianavitor.simplelibrarygame.repository.StudentRepository;
+import com.vianavitor.simplelibrarygame.repository.StudentStatsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class BookReadHistoryService {
@@ -24,6 +26,9 @@ public class BookReadHistoryService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private StudentStatsRepository statsRepository;
 
     public void register(BookReadHistory data) {
         Book book = bookRepository.findById(data.getBook().getId())
@@ -43,13 +48,18 @@ public class BookReadHistoryService {
             data.setBook(book);
             data.setUser(student);
         } else {
+            int page = data.getLastPageRead();
+
             data = result.get();
+            data.setLastPageRead(page);
         }
 
-        LocalDate now = LocalDate.now();
-        data.setLastUpdate(now);
-        
-        repository.save(data);
+        data.setLastUpdate(LocalDate.now());
+
+        BookReadHistory current = repository.save(data);
+        student.getStats().setCurrentBook(current);
+
+        statsRepository.save(student.getStats());
     }
 
     public List<BookReadHistory> getByStudent(Long studentId) {
@@ -70,9 +80,10 @@ public class BookReadHistoryService {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("not found student"));
 
-        return repository.findByStudent(student)
-                .stream()
-                .findFirst()
-                .orElseGet(BookReadHistory::new);
+        AtomicReference<BookReadHistory> lastOne = new AtomicReference<>();
+        repository.findByStudent(student)
+                .forEach(lastOne::set);
+
+        return lastOne.get();
     }
 }

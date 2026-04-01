@@ -30,7 +30,6 @@ public class StudentService implements ManageableUser<Student> {
     @Autowired
     private PasswordEncoder encoder;
 
-    @Autowired
     private StudentStats stats;
 
     @Autowired

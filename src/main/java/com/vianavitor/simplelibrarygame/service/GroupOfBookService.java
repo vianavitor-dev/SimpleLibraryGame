@@ -10,6 +10,8 @@ import com.vianavitor.simplelibrarygame.repository.GroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class GroupOfBookService {
     @Autowired
@@ -20,6 +22,21 @@ public class GroupOfBookService {
 
     @Autowired
     private GroupRepository groupRepository;
+
+    private GroupOfBook groupOfBook;
+
+    @Autowired
+    public GroupOfBookService() {}
+
+    public GroupOfBookService(
+            GroupOfBookRepository repository, BookRepository bookRepository,
+            GroupRepository groupRepository, GroupOfBook groupOfBook
+    ) {
+        this.repository = repository;
+        this.bookRepository = bookRepository;
+        this.groupRepository = groupRepository;
+        this.groupOfBook = groupOfBook;
+    }
 
     public void addBookToGroup(Long groupId, Long bookId) {
         Group group = groupRepository.findById(groupId)
@@ -34,9 +51,9 @@ public class GroupOfBookService {
                     throw new RuntimeException("book already saved into the group");
                 });
 
-        GroupOfBook groupOfBook = new GroupOfBook();
         groupOfBook.setBook(book);
         groupOfBook.setGroup(group);
+        groupOfBook.setCreatedAt(LocalDate.now());
 
         repository.save(groupOfBook);
     }

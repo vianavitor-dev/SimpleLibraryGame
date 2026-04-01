@@ -13,14 +13,14 @@ public class InvalidTokenService {
     @Autowired
     private InvalidTokenRepository repository;
 
+    private InvalidToken invalidToken;
+
     public void add(String token) {
         boolean exists = repository.existsByToken(token);
 
         if (exists) {
             return;
         }
-
-        InvalidToken invalidToken = new InvalidToken();
 
         LocalDate now = LocalDate.now();
         long daysUntilDeleteDate = 1; // 1 day is just a value for test purposes
@@ -33,5 +33,9 @@ public class InvalidTokenService {
         repository.save(invalidToken);
     }
 
-    // These tokens are going to be deleted from the database from a script
+    public boolean isTokenValid(String token) {
+        return !repository.existsByToken(token);
+    }
+
+    // These tokens are going to be deleted from the database by a script
 }

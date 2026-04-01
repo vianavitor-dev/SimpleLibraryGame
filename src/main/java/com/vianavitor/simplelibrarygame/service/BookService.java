@@ -24,7 +24,10 @@ public class BookService {
     @Autowired
     private GenreRepository genreRepository;
 
-    private static final Map<Long, Book> cache = new HashMap<>();
+    private static final double maxRateValue = 5;
+    private static final double minRateValue = 0;
+
+//    private static final Map<Long, Book> cache = new HashMap<>();
 
     public void add(Book newBook, boolean confirmed) {
         if (!confirmed) {
@@ -74,7 +77,7 @@ public class BookService {
         repository.save(book);
     }
 
-    public void modify(Long id, Book data, boolean confirmed)  {
+    public Book modify(Long id, Book data, boolean confirmed, Map<Long, Book> cache)  {
         // TODO: implement a more efficient way to stores a cache to deal with no long accessed data
         Book book = cache.containsKey(id)
                 ? cache.remove(id)
@@ -87,20 +90,18 @@ public class BookService {
 
         boolean isTitleFilledIn = data.getTitle() != null &&  !data.getTitle().isBlank();
 
-//         check if the title is duplicate and the librarian hadn't confirmed the action
+//        check if the title is a duplicate
         if (isTitleFilledIn && !confirmed) {
             List<Book> results = repository.findByTitle(data.getTitle());
 
             if (!results.isEmpty()) {
-//                 if the search returns something it means that this tittle already belongs to another book registered
+//                 if the search returns something it means that this title already belongs to another book registered
                 Optional<Book> duplicateBookTitle = results.stream()
-                        .filter(b -> !Objects.equals(b.getId(), id))
+                        .filter(b -> Objects.equals(b.getId(), id))
                         .findFirst();
 
                 if (duplicateBookTitle.isPresent()) {
-                    throw new RuntimeException("""
-                                there is a book with the same title registered, even so do you wish to proceed?
-                                """);
+                    throw new RuntimeException("there is a book with the same title registered, even so do you wish to proceed?");
                 }
             }
         }
@@ -126,7 +127,7 @@ public class BookService {
             book.setBookGenres(bookGenres);
         }
 
-        repository.save(book);
+        return repository.save(book);
     }
 
     private Set<Author> getBookAuthorsHelper(Set<Author> bookAuthors) {

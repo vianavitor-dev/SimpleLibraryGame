@@ -17,11 +17,12 @@ public class GroupService {
     @Autowired
     private StudentRepository studentRepository;
 
+    private Group group;
+
     public Group create(String name, Long studentId) {
         Student owner = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("not found student"));
 
-        Group group = new Group();
         group.setName(name);
         group.setStudent(owner);
 

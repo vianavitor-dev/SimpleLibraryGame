@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.Classroom;
 import com.vianavitor.simplelibrarygame.model.Professor;
 import com.vianavitor.simplelibrarygame.model.Student;
@@ -26,6 +27,21 @@ public class ClassroomService {
     @Autowired
     private StudentRepository studentRepository;
 
+    private Classroom classroom;
+
+    @Autowired
+    public ClassroomService() { }
+
+    public ClassroomService(
+            ClassroomRepository repository, ProfessorRepository professorRepository,
+            StudentRepository studentRepository, Classroom classroom
+    ) {
+        this.repository = repository;
+        this.professorRepository = professorRepository;
+        this.studentRepository = studentRepository;
+        this.classroom = classroom;
+    }
+
     private String generatePublicCode() {
         return UUID.randomUUID().toString().replaceAll("-", "");
     }
@@ -36,7 +52,6 @@ public class ClassroomService {
             throw new RuntimeException("this classroom already exists");
         }
 
-        Classroom classroom = new Classroom();
         classroom.setPublicCode(this.generatePublicCode());
         classroom.setName(name);
 
@@ -44,15 +59,15 @@ public class ClassroomService {
     }
 
     public Set<UserClassroom> modifyUsersInClassroom(Long id, Set<UserClassroom> students) {
-        Classroom classroom = repository.findById(id)
+        classroom = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("classroom not found"));
 
         classroom.setUsers(students);
         return repository.save(classroom).getUsers();
     }
 
-    public boolean changeName(Long id, String name) {
-        Classroom classroom = repository.findById(id)
+    public Classroom changeName(Long id, String name) {
+        classroom = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("classroom not found"));
 
         boolean exists = repository.findByName(name).isPresent();
@@ -62,27 +77,12 @@ public class ClassroomService {
 
         classroom.setName(name);
 
-        repository.save(classroom);
-        return true;
+        return repository.save(classroom);
     }
 
     public void delete(Long id) {
-        Classroom classroom = repository.findById(id)
+        classroom = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("classroom not found"));
-
-        classroom.getUsers().forEach(user -> {
-            Set<Classroom> userClasses = user.getClassrooms();
-            userClasses.remove(classroom);
-
-            if (user instanceof Student) {
-                studentRepository.save((Student) user);
-            }
-            if (user instanceof Professor) {
-                professorRepository.save((Professor) user);
-            }
-
-            user.setClassrooms(userClasses);
-        });
 
         repository.delete(classroom);
     }

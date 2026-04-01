@@ -1,6 +1,7 @@
 package com.vianavitor.simplelibrarygame.model;
 
 import jakarta.persistence.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 
@@ -23,6 +24,15 @@ public class BookReadHistory {
 
     @Column(nullable = false)
     private LocalDate lastUpdate = LocalDate.now();
+
+    @Autowired
+    public BookReadHistory() {}
+
+    public BookReadHistory(Book book, Student student) {
+        this.book = book;
+        this.student = student;
+        this.lastUpdate = LocalDate.now();
+    }
 
     public Long getId() {
         return id;

@@ -13,8 +13,13 @@ public class Classroom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToMany(mappedBy = "classrooms")
-    private Set<UserClassroom> users = new HashSet<>();
+    @ManyToMany()
+    @JoinTable(
+            name = "user_classroom",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "classroom_id")
+    )
+    private Set<UserClassroom> usersInClassroom = new HashSet<>();
 
     @Column(unique = true)
     private String name;
@@ -31,11 +36,11 @@ public class Classroom {
     }
 
     public Set<UserClassroom> getUsers() {
-        return users;
+        return usersInClassroom;
     }
 
-    public void setUsers(Set<UserClassroom> users) {
-        this.users = users;
+    public void setUsers(Set<UserClassroom> usersInClassroom) {
+        this.usersInClassroom = usersInClassroom;
     }
 
     public String getName() {

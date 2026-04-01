@@ -3,13 +3,25 @@ package com.vianavitor.simplelibrarygame.service;
 import com.vianavitor.simplelibrarygame.model.Author;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.repository.AuthorRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class AuthorService {
+    @Autowired
     private AuthorRepository repository;
+
+    private Author author;
+
+    @Autowired
+    public AuthorService() {}
+
+    public AuthorService(AuthorRepository repository, Author author) {
+        this.repository = repository;
+        this.author = author;
+    }
 
     public void add(String name) {
         repository.findByName(name)
@@ -17,7 +29,6 @@ public class AuthorService {
                     throw new RuntimeException("author already registered");
                 });
 
-        Author author = new Author();
         author.setName(name);
 
         repository.save(author);
