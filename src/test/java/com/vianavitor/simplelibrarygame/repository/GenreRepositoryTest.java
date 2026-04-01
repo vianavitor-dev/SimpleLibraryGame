@@ -38,7 +38,7 @@ class GenreRepositoryTest extends BaseRepositoryTest {
         Genre newGenre = new Genre();
         newGenre.setName("Mystery");
 
-        entityManager.persist(testGenre);
+        entityManager.persist(newGenre);
         entityManager.flush();
 
         Optional<Genre> found = genreRepository.findByName("Mystery");
@@ -88,9 +88,8 @@ class GenreRepositoryTest extends BaseRepositoryTest {
         Genre duplicateGenre = new Genre();
         duplicateGenre.setName("Science Fiction");
 
-        entityManager.persist(duplicateGenre);
-
         org.junit.jupiter.api.Assertions.assertThrows(Exception.class, () -> {
+            entityManager.persist(duplicateGenre);
             entityManager.flush();
         });
     }

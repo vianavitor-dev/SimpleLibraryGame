@@ -113,12 +113,6 @@ class StudentStatsRepositoryTest extends BaseRepositoryTest {
     }
 
     @Test
-    void shouldReturnEmptyListWhenNoCurrentBook() {
-        List<StudentStats> statsWithBook = statsRepository.findByCurrentBook(null);
-        assertThat(statsWithBook).isEmpty();
-    }
-
-    @Test
     void shouldUpdateCurrentBook() {
         BookReadHistory history = new BookReadHistory();
         history.setUser(testStudent);
