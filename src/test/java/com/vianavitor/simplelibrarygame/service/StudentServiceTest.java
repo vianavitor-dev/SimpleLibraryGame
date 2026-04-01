@@ -4,17 +4,15 @@ import com.vianavitor.simplelibrarygame.model.Classroom;
 import com.vianavitor.simplelibrarygame.model.Genre;
 import com.vianavitor.simplelibrarygame.model.Student;
 import com.vianavitor.simplelibrarygame.model.StudentStats;
-import com.vianavitor.simplelibrarygame.model.utils.classes.User;
 import com.vianavitor.simplelibrarygame.repository.ClassroomRepository;
 import com.vianavitor.simplelibrarygame.repository.StudentRepository;
 import com.vianavitor.simplelibrarygame.repository.StudentStatsRepository;
+import com.vianavitor.simplelibrarygame.service.utils.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -22,8 +20,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
-class StudentServiceTest extends User {
+class StudentServiceTest extends BaseServiceTest {
 
     @Mock
     private StudentRepository repository;
@@ -159,7 +156,7 @@ class StudentServiceTest extends User {
     }
 
     @Test
-    void getAll() {
+    void testGetAll() {
         List<Student> list = new ArrayList<>();
         list.add(student);
 
@@ -176,7 +173,7 @@ class StudentServiceTest extends User {
     }
 
     @Test
-    void getFavoriteGenres() {
+    void testGetFavoriteGenres() {
         Long id = 1L;
 
         Genre action = new Genre();
@@ -202,7 +199,7 @@ class StudentServiceTest extends User {
     }
 
     @Test
-    void deactivate() {
+    void testDeactivate() {
         Long id = 1L;
 
         Mockito.when(repository.findById(id))
@@ -217,7 +214,7 @@ class StudentServiceTest extends User {
     }
 
     @Test
-    void activate() {
+    void testActivate() {
         Long id = 1L;
 
         Mockito.when(repository.findById(id))

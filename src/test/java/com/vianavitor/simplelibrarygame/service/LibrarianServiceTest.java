@@ -4,6 +4,7 @@ import com.vianavitor.simplelibrarygame.model.Classroom;
 import com.vianavitor.simplelibrarygame.model.Librarian;
 import com.vianavitor.simplelibrarygame.repository.ClassroomRepository;
 import com.vianavitor.simplelibrarygame.repository.LibrarianRepository;
+import com.vianavitor.simplelibrarygame.service.utils.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,8 +21,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ExtendWith(MockitoExtension.class)
-public class LibrarianServiceTest {    
+public class LibrarianServiceTest extends BaseServiceTest {
     
     @Mock
     private LibrarianRepository repository;
@@ -101,7 +101,7 @@ public class LibrarianServiceTest {
     }
 
     @Test
-    void getAll() {
+    void testGetAll() {
         List<Librarian> list = new ArrayList<>();
         list.add(librarian);
 
@@ -118,7 +118,7 @@ public class LibrarianServiceTest {
     }
 
     @Test
-    void deactivate() {
+    void testDeactivate() {
         Long id = 1L;
 
         Mockito.when(repository.findById(id))
@@ -133,7 +133,7 @@ public class LibrarianServiceTest {
     }
 
     @Test
-    void activate() {
+    void testActivate() {
         Long id = 1L;
 
         Mockito.when(repository.findById(id))
