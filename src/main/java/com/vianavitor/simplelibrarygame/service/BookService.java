@@ -6,10 +6,22 @@ import com.vianavitor.simplelibrarygame.model.Genre;
 import com.vianavitor.simplelibrarygame.repository.AuthorRepository;
 import com.vianavitor.simplelibrarygame.repository.BookRepository;
 import com.vianavitor.simplelibrarygame.repository.GenreRepository;
+import org.apache.tomcat.util.http.fileupload.impl.IOFileUploadException;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.security.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -24,18 +36,27 @@ public class BookService {
     @Autowired
     private GenreRepository genreRepository;
 
-    private static final double maxRateValue = 5;
-    private static final double minRateValue = 0;
+    @Value("${book.image.path}")
+    private String imagePath;
 
-//    private static final Map<Long, Book> cache = new HashMap<>();
+    @Autowired
+    public BookService() {}
+
+    public BookService(
+            BookRepository repository, AuthorRepository authorRepository,
+            GenreRepository genreRepository, String imagePath
+    ) {
+        this.repository = repository;
+        this.authorRepository = authorRepository;
+        this.genreRepository = genreRepository;
+        this.imagePath = imagePath;
+    }
 
     public void add(Book newBook, boolean confirmed) {
         if (!confirmed) {
             boolean exists = repository.existsByTitle(newBook.getTitle());
             if (exists) {
-                throw new RuntimeException("""
-                    there is a book with the same title registered, do you still want to proceed?
-                """);
+                throw new RuntimeException("there is a book with the same title registered, do you still want to proceed?");
             }
         }
 
@@ -49,9 +70,46 @@ public class BookService {
 //         ...
         Book book = repository.save(newBook);
     }
+    
+    public Book changeImage(Long id, MultipartFile file) throws IOException {
+        Book book = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("not found book"));
 
-    public void changeImage() {
-        // TODO: make it functional
+        File directory = new File(imagePath + "/");
+        File destination = getFile(file, directory, book);
+        file.transferTo(destination);
+
+//        System.out.println(destination.getAbsolutePath());
+
+        book.setImagePath(destination.getAbsolutePath());
+        return repository.save(book);
+    }
+
+    private static @NonNull File getFile(MultipartFile file, File directory, Book book) throws IOException {
+        if (!directory.exists()) {
+            directory.mkdirs(); // Ensure directory exists
+        }
+
+        if (file.getContentType() == null) {
+            throw new NullPointerException("file content type cannot be null");
+        }
+
+        String splited[] = file.getContentType().split("/");
+
+        if (splited.length <= 1) {
+            throw new RuntimeException("invalid file content type format");
+        }
+
+        String extension = splited[1];
+
+        switch (extension) {
+            case "jpeg", "png", "gif", "bmp":
+                break;
+            default:
+                throw new IOException("unsupported image type: " + extension);
+        }
+
+        return new File(directory, book.getId().toString() + "." + extension);
     }
 
     public void rate(Long id, int rate) {

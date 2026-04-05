@@ -12,8 +12,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Mockito.*;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -299,6 +303,40 @@ public class BookServiceTest extends BaseServiceTest {
         verify(repository, times(1)).findByTitle(title);
         verify(authorRepository, times(1)).findByName("John Ronald Reuel Tolkien");
         verify(genreRepository, times(1)).findByName("Adventure");
+        verify(repository, times(1)).save(testBook);
+    }
+
+    @Test
+    public void testChangeImage() {
+        testBook.setId(1L);
+
+        byte[] content = "fake-image-binary-data".getBytes();
+        MockMultipartFile file = new MockMultipartFile(
+                "image",
+                "logo.png",
+                "image/png",
+                content
+        );
+
+        when(repository.findById(1L))
+                .thenReturn(Optional.of(testBook));
+
+        when(repository.save(any(Book.class)))
+                .thenReturn(testBook);
+
+        try {
+            BookService service1 = new BookService(
+                    repository, authorRepository, genreRepository, "/svr/books_img"
+            );
+
+            Book result = service1.changeImage(1L, file);
+
+            assertThat(result.getImagePath()).isEqualTo("/svr/books_img/1.png");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        verify(repository, times(1)).findById(1L);
         verify(repository, times(1)).save(testBook);
     }
 }
