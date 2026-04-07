@@ -1,6 +1,10 @@
 package com.vianavitor.simplelibrarygame.service;
 
 import com.vianavitor.simplelibrarygame.dto.utils.UserInfo;
+import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
+import com.vianavitor.simplelibrarygame.exception.InvalidOperationException;
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
+import com.vianavitor.simplelibrarygame.exception.UserDeactivatedException;
 import com.vianavitor.simplelibrarygame.model.Genre;
 import com.vianavitor.simplelibrarygame.model.Student;
 import com.vianavitor.simplelibrarygame.model.StudentStats;
@@ -48,11 +52,11 @@ public class StudentService implements ManageableUser<Student> {
     }
 
     @Override
-    public Student register(Student entity) {
+    public Student register(Student entity) throws DuplicateResourceException {
         boolean studentExists = repository.existsByUsername(entity.getUsername());
 
         if (studentExists) {
-            throw new RuntimeException("username already in use");
+            throw new DuplicateResourceException("username already in use");
         }
 
         String hashedPassword = encoder.encode(entity.getPassword());
@@ -61,12 +65,12 @@ public class StudentService implements ManageableUser<Student> {
         return repository.save(entity);
     }
 
-    public void register(Student newStudent, String classroomCode, Set<Genre> favoriteGenres) {
+    public void register(Student newStudent, String classroomCode, Set<Genre> favoriteGenres) throws DuplicateResourceException, ResourceNotFoundException {
         classroomRepository.findByPublicCode(classroomCode)
                 .ifPresentOrElse((classroom ->
                         newStudent.getClassrooms().add(classroom)
                 ), () -> {
-                    throw new RuntimeException("not found classroom");
+                    throw new ResourceNotFoundException("not found classroom");
                 });
 
         newStudent.setFavoriteGenre(favoriteGenres);
@@ -77,36 +81,30 @@ public class StudentService implements ManageableUser<Student> {
 
         student.setStats(stats);
         repository.save(student);
-
-//        boolean exists = statsRepository.existsById(student.getId());
-//        if (exists) {
-//            throw new RuntimeException("student stats already exists");
-//        }
-//
     }
 
-    public StudentStats getStats(Long id) {
+    public StudentStats getStats(Long id) throws ResourceNotFoundException {
         Student student = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
         return statsRepository.findByStudent(student)
-                .orElseThrow(() -> new RuntimeException("not found student stats"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student stats"));
     }
 
     @Override
-    public Long login(String username, String password) {
+    public Long login(String username, String password) throws InvalidOperationException, UserDeactivatedException{
         Student student = (Student) repository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("invalid username or password"));
+                .orElseThrow(() -> new InvalidOperationException("invalid username or password"));
 
         boolean invalidPassword = !encoder.matches(password, student.getPassword());
 
         if (invalidPassword) {
-            throw new RuntimeException("invalid username or password");
+            throw new InvalidOperationException("invalid username or password");
         }
 
         boolean wasUserDeactivated = !student.isActive();
         if (wasUserDeactivated) {
-            throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
+            throw new UserDeactivatedException("this user was deactivated, talk with a professor or administrador to get more information");
         }
 
         // TODO: create JWT Token for authentication
@@ -123,26 +121,26 @@ public class StudentService implements ManageableUser<Student> {
     }
 
 
-    public Set<Genre> getFavoriteGenres(Long id) {
+    public Set<Genre> getFavoriteGenres(Long id) throws ResourceNotFoundException {
         Student student = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
         return student.getFavoriteGenre();
     }
 
     @Override
-    public void deactivate(Long id) {
+    public void deactivate(Long id) throws ResourceNotFoundException {
         Student student = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
         student.setActive(false);
         repository.save(student);
     }
 
     @Override
-    public void activate(Long id) {
+    public void activate(Long id) throws ResourceNotFoundException {
         Student student = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
         student.setActive(true);
         repository.save(student);

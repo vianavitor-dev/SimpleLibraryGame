@@ -1,5 +1,7 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.BookReadHistory;
 import com.vianavitor.simplelibrarygame.model.Student;
@@ -63,19 +65,15 @@ public class StudentStatsService {
         this.history = history;
     }
 
-    //    lvl up: lvl+1 & exp 0 & max-exp + max-exp*0.5
-//    submit book summary: exp + N & ongoing-streak + 1
-
-    public StudentStats create(Long userId) {
+    public StudentStats create(Long userId) throws ResourceNotFoundException, DuplicateResourceException {
         Student student = studentRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         boolean exists = student.getStats() != null;
         if (exists) {
-            throw new RuntimeException("student stats already exists");
+            throw new DuplicateResourceException("student stats already exists");
         }
 
-//        StudentStats stats = new StudentStats();
         stats.setUser(student);
         stats = repository.save(stats);
 
@@ -85,17 +83,17 @@ public class StudentStatsService {
         return stats;
     }
 
-    public StudentStats get(Long id) {
+    public StudentStats get(Long id) throws ResourceNotFoundException {
         Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         return repository.findByStudent(student)
-                .orElseThrow(() -> new RuntimeException("not found student stats"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student stats"));
     }
 
-    public int calculateAverageReadingTime(Long id, double readingTimeInMins) {
+    public int calculateAverageReadingTime(Long id, double readingTimeInMins) throws ResourceNotFoundException {
         StudentStats stats = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found student stats"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student stats"));
 
         double value = stats.getAverageReadingTime();
         int count = stats.getReadingCount();
@@ -120,15 +118,15 @@ public class StudentStatsService {
         repository.save(stats);
     }
 
-    public int setOngoingSteak(Long id) {
+    public int setOngoingSteak(Long id) throws ResourceNotFoundException {
         Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         StudentStats stats = student.getStats();
 
         boolean doNotExists = (stats == null);
         if (doNotExists) {
-            throw new RuntimeException("not found student stats");
+            throw new ResourceNotFoundException("not found student stats");
         }
 
         LocalDate now = LocalDate.now();
@@ -145,9 +143,9 @@ public class StudentStatsService {
         return stats.getOngoingStreak();
     }
 
-    public StudentStats addExp(Long id, int exp) {
+    public StudentStats addExp(Long id, int exp) throws ResourceNotFoundException {
         StudentStats stats = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found student stats"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student stats"));
 
         int maxLvlExp = stats.getMaxLvlExperience();
         int currentExperience = stats.getCurrentExperience();
@@ -165,10 +163,10 @@ public class StudentStatsService {
         return stats;
     }
 
-    public void setCurrentBook(Long userId, Long bookId, int page) {
+    public void setCurrentBook(Long userId, Long bookId, int page) throws ResourceNotFoundException {
         // TODO: create custom queries to decreased the amount of requests
         Student student = studentRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         Optional<BookReadHistory> result = historyRepository.findByStudent(student)
                 .stream()
@@ -177,7 +175,7 @@ public class StudentStatsService {
 
         if (result.isEmpty()) {
             Book book = bookRepository.findById(bookId)
-                    .orElseThrow(() -> new RuntimeException("not found book"));
+                    .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
             history.setUser(student);
             history.setBook(book);
@@ -193,15 +191,12 @@ public class StudentStatsService {
         repository.save(student.getStats());
     }
 
-    public void delete(Long id) {
+    public void delete(Long id) throws ResourceNotFoundException {
         Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found student"));
-
-//        StudentStats stats = student.getStats();
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         student.setStats(null);
         studentRepository.save(student);
-
 //        repository.delete(stats);
     }
 }

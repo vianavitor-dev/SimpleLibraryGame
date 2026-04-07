@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.BookSummary;
 import com.vianavitor.simplelibrarygame.model.Student;
@@ -23,12 +24,12 @@ public class BookSummaryService {
     @Autowired
     private StudentRepository studentRepository;
 
-    public void submit(String text, Long bookId, Long studentId)  {
+    public void submit(String text, Long bookId, Long studentId) throws ResourceNotFoundException {
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("not found book"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("student not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("student not found"));
 
         BookSummary summary = new BookSummary();
         summary.setBook(book);
@@ -37,16 +38,16 @@ public class BookSummaryService {
         repository.save(summary);
     }
 
-    public List<BookSummary> getByStudent(Long studentId) {
+    public List<BookSummary> getByStudent(Long studentId) throws ResourceNotFoundException {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("student not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("student not found"));
 
         return repository.findByStudent(student);
     }
 
-    public List<BookSummary> getByBook(Long bookId) {
+    public List<BookSummary> getByBook(Long bookId) throws ResourceNotFoundException {
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("book not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("book not found"));
 
         return repository.findByBook(book);
     }

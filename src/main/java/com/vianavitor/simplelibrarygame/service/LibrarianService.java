@@ -1,6 +1,10 @@
 package com.vianavitor.simplelibrarygame.service;
 
 import com.vianavitor.simplelibrarygame.dto.utils.UserInfo;
+import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
+import com.vianavitor.simplelibrarygame.exception.InvalidOperationException;
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
+import com.vianavitor.simplelibrarygame.exception.UserDeactivatedException;
 import com.vianavitor.simplelibrarygame.model.Librarian;
 import com.vianavitor.simplelibrarygame.repository.LibrarianRepository;
 import com.vianavitor.simplelibrarygame.service.utils.ManageableUser;
@@ -20,11 +24,11 @@ public class LibrarianService implements ManageableUser<Librarian> {
     private PasswordEncoder encoder;
 
     @Override
-    public Librarian register(Librarian entity) {
+    public Librarian register(Librarian entity) throws DuplicateResourceException {
         boolean studentExists = repository.existsByUsername(entity.getUsername());
 
         if (studentExists) {
-            throw new RuntimeException("username already in use");
+            throw new DuplicateResourceException("username already in use");
         }
 
         String hashedPassword = encoder.encode(entity.getPassword());
@@ -34,19 +38,19 @@ public class LibrarianService implements ManageableUser<Librarian> {
     }
 
     @Override
-    public Long login(String username, String password) {
+    public Long login(String username, String password) throws InvalidOperationException, UserDeactivatedException{
         Librarian librarian = (Librarian) repository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("invalid username or password"));
+                .orElseThrow(() -> new InvalidOperationException("invalid username or password"));
 
         boolean invalidPassword = !encoder.matches(password, librarian.getPassword());
 
         if (invalidPassword) {
-            throw new RuntimeException("invalid username or password");
+            throw new InvalidOperationException("invalid username or password");
         }
 
         boolean wasUserDeactivated = !librarian.isActive();
         if (wasUserDeactivated) {
-            throw new RuntimeException("this user was deactivated, talk with a professor or administrador to get more information");
+            throw new UserDeactivatedException("this user was deactivated, talk with a professor or administrador to get more information");
         }
 
         // TODO: create JWT Token for authentication
@@ -63,18 +67,18 @@ public class LibrarianService implements ManageableUser<Librarian> {
     }
 
     @Override
-    public void deactivate(Long id) {
+    public void deactivate(Long id) throws ResourceNotFoundException {
         Librarian student = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
         student.setActive(false);
         repository.save(student);
     }
 
     @Override
-    public void activate(Long id) {
+    public void activate(Long id) throws ResourceNotFoundException {
         Librarian student = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
         student.setActive(true);
         repository.save(student);

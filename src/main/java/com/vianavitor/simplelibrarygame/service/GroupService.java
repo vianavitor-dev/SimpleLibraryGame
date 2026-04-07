@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Group;
 import com.vianavitor.simplelibrarygame.model.Student;
 import com.vianavitor.simplelibrarygame.repository.GroupRepository;
@@ -19,9 +20,9 @@ public class GroupService {
 
     private Group group;
 
-    public Group create(String name, Long studentId) {
+    public Group create(String name, Long studentId) throws ResourceNotFoundException {
         Student owner = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         group.setName(name);
         group.setStudent(owner);
@@ -29,17 +30,17 @@ public class GroupService {
         return repository.save(group);
     }
 
-    public Group changeName(Long id, String name) {
+    public Group changeName(Long id, String name) throws ResourceNotFoundException {
         Group group = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found group"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found group"));
 
         group.setName(name);
         return repository.save(group);
     }
 
-    public List<Group> getByStudent(Long studentId) {
+    public List<Group> getByStudent(Long studentId) throws ResourceNotFoundException {
         Student owner = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         return repository.findByStudent(owner);
     }

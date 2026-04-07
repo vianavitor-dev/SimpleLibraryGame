@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Genre;
 import com.vianavitor.simplelibrarygame.repository.GenreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +17,13 @@ public class GenreService {
         return repository.findAll();
     }
 
-    public Genre getById(Long id) {
+    public Genre getById(Long id) throws ResourceNotFoundException {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("this genre don't exists"));
+                .orElseThrow(() -> new ResourceNotFoundException("this genre don't exists"));
     }
 
-    public Genre getByName(String name) {
+    public Genre getByName(String name) throws ResourceNotFoundException {
         return repository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("this genre don't exists"));
+                .orElseThrow(() -> new ResourceNotFoundException("this genre don't exists"));
     }
 }

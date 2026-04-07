@@ -1,5 +1,7 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.Group;
 import com.vianavitor.simplelibrarygame.model.GroupOfBook;
@@ -38,17 +40,17 @@ public class GroupOfBookService {
         this.groupOfBook = groupOfBook;
     }
 
-    public void addBookToGroup(Long groupId, Long bookId) {
+    public void addBookToGroup(Long groupId, Long bookId) throws ResourceNotFoundException, DuplicateResourceException {
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new RuntimeException("not found group"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found group"));
 
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("not found book"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         GroupOfBookId id = new GroupOfBookId(groupId, bookId);
         repository.findById(id)
                 .ifPresent((x) -> {
-                    throw new RuntimeException("book already saved into the group");
+                    throw new DuplicateResourceException("book already saved into the group");
                 });
 
         groupOfBook.setBook(book);
@@ -58,10 +60,10 @@ public class GroupOfBookService {
         repository.save(groupOfBook);
     }
 
-    public void removeBookFromGroup(Long groupId, Long bookId) {
+    public void removeBookFromGroup(Long groupId, Long bookId) throws ResourceNotFoundException {
         GroupOfBookId id = new GroupOfBookId(groupId, bookId);
         GroupOfBook groupOfBook = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("this book is not registered in the group"));
+                .orElseThrow(() -> new ResourceNotFoundException("this book is not registered in the group"));
 
         repository.delete(groupOfBook);
     }

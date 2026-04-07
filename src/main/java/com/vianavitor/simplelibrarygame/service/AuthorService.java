@@ -1,5 +1,7 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Author;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.repository.AuthorRepository;
@@ -23,10 +25,10 @@ public class AuthorService {
         this.author = author;
     }
 
-    public void add(String name) {
+    public void add(String name) throws DuplicateResourceException {
         repository.findByName(name)
                 .ifPresent((a) -> {
-                    throw new RuntimeException("author already registered");
+                    throw new DuplicateResourceException("author already registered");
                 });
 
         author.setName(name);
@@ -34,23 +36,23 @@ public class AuthorService {
         repository.save(author);
     }
 
-    public Author getByName(String name) {
+    public Author getByName(String name) throws ResourceNotFoundException {
         return repository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("not found author"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found author"));
     }
 
     public List<Author> getAll() {
         return (List<Author>) repository.findAll();
     }
 
-    public Author get(Long id) {
+    public Author get(Long id) throws ResourceNotFoundException {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found author"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found author"));
     }
 
     public List<Book> getAuthorBooks(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found author"))
+                .orElseThrow(() -> new ResourceNotFoundException("not found author"))
                 .getBooks();
     }
 }

@@ -1,5 +1,9 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
+import com.vianavitor.simplelibrarygame.exception.UnconfirmedOperationException;
+import com.vianavitor.simplelibrarygame.exception.UnsupportedFileTypeException;
 import com.vianavitor.simplelibrarygame.model.Author;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.Genre;
@@ -52,11 +56,11 @@ public class BookService {
         this.imagePath = imagePath;
     }
 
-    public void add(Book newBook, boolean confirmed) {
+    public void add(Book newBook, boolean confirmed) throws UnconfirmedOperationException {
         if (!confirmed) {
             boolean exists = repository.existsByTitle(newBook.getTitle());
             if (exists) {
-                throw new RuntimeException("there is a book with the same title registered, do you still want to proceed?");
+                throw new UnconfirmedOperationException("there is a book with the same title registered, do you still want to proceed?");
             }
         }
 
@@ -71,9 +75,9 @@ public class BookService {
         Book book = repository.save(newBook);
     }
     
-    public Book changeImage(Long id, MultipartFile file) throws IOException {
+    public Book changeImage(Long id, MultipartFile file) throws ResourceNotFoundException, IOException {
         Book book = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found book"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         File directory = new File(imagePath + "/");
         File destination = getFile(file, directory, book);
@@ -85,7 +89,7 @@ public class BookService {
         return repository.save(book);
     }
 
-    private static @NonNull File getFile(MultipartFile file, File directory, Book book) throws IOException {
+    private static @NonNull File getFile(MultipartFile file, File directory, Book book) throws UnsupportedFileTypeException {
         if (!directory.exists()) {
             directory.mkdirs(); // Ensure directory exists
         }
@@ -97,7 +101,7 @@ public class BookService {
         String splited[] = file.getContentType().split("/");
 
         if (splited.length <= 1) {
-            throw new RuntimeException("invalid file content type format");
+            throw new UnsupportedFileTypeException("invalid file content type format");
         }
 
         String extension = splited[1];
@@ -106,15 +110,15 @@ public class BookService {
             case "jpeg", "png", "gif", "bmp":
                 break;
             default:
-                throw new IOException("unsupported image type: " + extension);
+                throw new UnsupportedFileTypeException("unsupported image type: " + extension);
         }
 
         return new File(directory, book.getId().toString() + "." + extension);
     }
 
-    public void rate(Long id, int rate) {
+    public void rate(Long id, int rate) throws ResourceNotFoundException{
         Book book = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found book"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         double value = book.getRatingValue();
         int count = book.getRatingCount();
@@ -127,20 +131,20 @@ public class BookService {
         repository.save(book);
     }
 
-    public void setAvailable(Long id, boolean value) {
+    public void setAvailable(Long id, boolean value) throws ResourceNotFoundException {
         Book book = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("not found book"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         book.setAvailable(value);
         repository.save(book);
     }
 
-    public Book modify(Long id, Book data, boolean confirmed, Map<Long, Book> cache)  {
+    public Book modify(Long id, Book data, boolean confirmed, Map<Long, Book> cache) throws ResourceNotFoundException, DuplicateResourceException {
         // TODO: implement a more efficient way to stores a cache to deal with no long accessed data
         Book book = cache.containsKey(id)
                 ? cache.remove(id)
                 : repository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("not found book"));
+                    .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         if (!cache.containsKey(id)) {
             cache.put(id, book);
@@ -159,7 +163,7 @@ public class BookService {
                         .findFirst();
 
                 if (duplicateBookTitle.isPresent()) {
-                    throw new RuntimeException("there is a book with the same title registered, even so do you wish to proceed?");
+                    throw new DuplicateResourceException("there is a book with the same title registered, even so do you wish to proceed?");
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.BookReadHistory;
 import com.vianavitor.simplelibrarygame.model.Student;
@@ -30,12 +31,12 @@ public class BookReadHistoryService {
     @Autowired
     private StudentStatsRepository statsRepository;
 
-    public void register(BookReadHistory data) {
+    public void register(BookReadHistory data) throws ResourceNotFoundException{
         Book book = bookRepository.findById(data.getBook().getId())
-                .orElseThrow(() -> new RuntimeException("not found book"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         Student student = studentRepository.findById(data.getUser().getId())
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         Optional<BookReadHistory> result = repository.findByStudent(student)
                 .stream()
@@ -62,23 +63,23 @@ public class BookReadHistoryService {
         statsRepository.save(student.getStats());
     }
 
-    public List<BookReadHistory> getByStudent(Long studentId) {
+    public List<BookReadHistory> getByStudent(Long studentId) throws ResourceNotFoundException {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         return repository.findByStudent(student);
     }
 
-    public List<BookReadHistory> getByBook(Long bookId) {
+    public List<BookReadHistory> getByBook(Long bookId) throws ResourceNotFoundException {
         Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("not found book"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
         return repository.findByBook(book);
     }
 
-    public BookReadHistory getByStudentTheLastOne(Long studentId) {
+    public BookReadHistory getByStudentTheLastOne(Long studentId) throws ResourceNotFoundException {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
         AtomicReference<BookReadHistory> lastOne = new AtomicReference<>();
         repository.findByStudent(student)
