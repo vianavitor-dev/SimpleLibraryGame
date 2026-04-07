@@ -318,6 +318,8 @@ public class BookServiceTest extends BaseServiceTest {
                 content
         );
 
+        String destination = "/svr/books_img";
+
         when(repository.findById(1L))
                 .thenReturn(Optional.of(testBook));
 
@@ -326,12 +328,12 @@ public class BookServiceTest extends BaseServiceTest {
 
         try {
             BookService service1 = new BookService(
-                    repository, authorRepository, genreRepository, "/svr/books_img"
+                    repository, authorRepository, genreRepository, destination
             );
 
             Book result = service1.changeImage(1L, file);
 
-            assertThat(result.getImagePath()).isEqualTo("/svr/books_img/1.png");
+            assertThat(result.getImagePath()).isEqualTo(destination + "/1.png");
         } catch (IOException e) {
             e.printStackTrace();
         }
