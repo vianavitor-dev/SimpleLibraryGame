@@ -1,7 +1,7 @@
 package com.vianavitor.simplelibrarygame.controller;
 
 import com.vianavitor.simplelibrarygame.dto.ApiResponse;
-import com.vianavitor.simplelibrarygame.dto.request.RegisterAdministratorRequest;
+import com.vianavitor.simplelibrarygame.dto.request.aux.UserInfoData;
 import com.vianavitor.simplelibrarygame.model.Administrator;
 import com.vianavitor.simplelibrarygame.service.AdministratorService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ public class AdministratorController {
     private AdministratorService administratorService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Administrator>> register(@RequestBody @Valid RegisterAdministratorRequest request, HttpServletRequest req) {
+    public ResponseEntity<ApiResponse<Administrator>> register(@RequestBody @Valid UserInfoData request, HttpServletRequest req) {
         Administrator saved = administratorService.register(
                 new Administrator(request.username(), request.password(), request.name())
         );

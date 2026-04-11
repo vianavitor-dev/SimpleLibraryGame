@@ -24,11 +24,25 @@ public class BookController {
     @Autowired
     private BookService bookService;
 
+    private Book createBookFromDto(AddBookRequest request) {
+        Book book = new Book();
+        book.setTitle(request.book().title());
+        book.setSynopsis(request.book().synopsis());
+        book.setBookAuthors(request.book().authors());
+        book.setBookGenres(request.book().genres());
+        book.setPageCount(request.book().pages());
+        book.setReleasedAt(request.book().releasedAt());
+
+        return book;
+    }
+
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> addBook(@Valid @RequestBody AddBookRequest request, HttpServletRequest req) {
-        bookService.add(request.book(), request.confirmed());
+    public ResponseEntity<ApiResponse<Book>> addBook(@Valid @RequestBody AddBookRequest request, HttpServletRequest req) {
+        Book book = createBookFromDto(request);
+
+        bookService.add(book, request.confirmed());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(null, "Book added", req.getRequestURI()));
+                .body(ApiResponse.success(book, "Book added", req.getRequestURI()));
     }
 
     @PostMapping("/{id}/rate")

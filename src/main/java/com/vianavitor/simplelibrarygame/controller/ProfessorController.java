@@ -24,11 +24,13 @@ public class ProfessorController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Professor>> register(@Valid @RequestBody RegisterProfessorRequest request, HttpServletRequest req) {
-        professorService.register(request.professor(), request.classroomCode());
-        Professor saved = request.professor();
+        Professor professor = new Professor(request.professor().username(), request.professor().password());
+        professor.setName(request.professor().name());
+
+        professorService.register(professor, request.classroomCode());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(saved, "Professor registered", req.getRequestURI()));
+                .body(ApiResponse.success(professor, "Professor registered", req.getRequestURI()));
     }
 
     @PostMapping("/login")

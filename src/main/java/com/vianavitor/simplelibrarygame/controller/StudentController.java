@@ -28,11 +28,13 @@ public class StudentController {
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Student>> register(@Valid @RequestBody RegisterStudentRequest request, HttpServletRequest req) {
-        studentService.register(request.student(), request.classroomCode(), request.favoriteGenres());
-        Student saved = request.student();
+        Student student = new Student(request.student().username(), request.student().password());
+        student.setName(request.student().name());
+
+        studentService.register(student, request.classroomCode(), request.favoriteGenres());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(saved, "Student registered", req.getRequestURI()));
+                .body(ApiResponse.success(student, "Student registered", req.getRequestURI()));
     }
 
     @PostMapping("/login")

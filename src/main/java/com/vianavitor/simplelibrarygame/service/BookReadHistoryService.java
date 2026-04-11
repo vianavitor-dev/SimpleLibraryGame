@@ -63,6 +63,11 @@ public class BookReadHistoryService {
         statsRepository.save(student.getStats());
     }
 
+    public BookReadHistory getById(Long id) throws ResourceNotFoundException {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
+    }
+
     public List<BookReadHistory> getByStudent(Long studentId) throws ResourceNotFoundException {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("not found student"));

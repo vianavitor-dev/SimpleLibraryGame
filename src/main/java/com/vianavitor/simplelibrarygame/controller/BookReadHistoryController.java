@@ -25,6 +25,13 @@ public class BookReadHistoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<BookReadHistory>> getById(@PathVariable Long id, HttpServletRequest request) {
+        BookReadHistory result = historyService.getById(id);
+        ApiResponse<BookReadHistory> response = ApiResponse.success(result, request.getRequestURI());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/student/{studentId}")
     public ResponseEntity<ApiResponse<List<BookReadHistory>>> getByStudent(@PathVariable Long studentId, HttpServletRequest request) {
         List<BookReadHistory> list = historyService.getByStudent(studentId);
