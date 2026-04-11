@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,6 +29,23 @@ public class ClassroomController {
         classroomService.create(name);
         ApiResponse<Void> response = ApiResponse.success(null, "Classroom created", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<ApiResponse<List<Classroom>>> getAll(
+            HttpServletRequest req
+    ) {
+        List<Classroom> result = classroomService.getAllClasses();
+        return ResponseEntity.ok(ApiResponse.success(result, "Result of searching all classrooms", req.getRequestURI()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Classroom>> getById(
+            @PathVariable Long id,
+            HttpServletRequest req
+    ) {
+        Classroom result = classroomService.getClassroom(id);
+        return ResponseEntity.ok(ApiResponse.success(result, "Result of searching by ID", req.getRequestURI()));
     }
 
     @PutMapping("/{id}/users")

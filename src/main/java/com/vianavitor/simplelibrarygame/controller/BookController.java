@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,6 +39,24 @@ public class BookController {
     ) {
         bookService.rate(id, request.rate());
         return ResponseEntity.ok(ApiResponse.success(null, "Rating submitted", req.getRequestURI()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<Book>> getBookById(
+            @PathVariable Long id,
+            HttpServletRequest req
+    ) {
+        Book result = bookService.getBook(id);
+        return ResponseEntity.ok(ApiResponse.success(result, "Result of the researching by ID", req.getRequestURI()));
+    }
+
+
+    @GetMapping("/")
+    public ResponseEntity<ApiResponse<List<Book>>> getAllBooks(
+            HttpServletRequest req
+    ) {
+        List<Book> result = bookService.getAllBooks();
+        return ResponseEntity.ok(ApiResponse.success(result, "Result of searching all books", req.getRequestURI()));
     }
 
     @PostMapping("/{id}/image")

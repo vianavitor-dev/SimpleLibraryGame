@@ -74,7 +74,16 @@ public class BookService {
 //         ...
         Book book = repository.save(newBook);
     }
-    
+
+    public List<Book> getAllBooks() {
+        return (List<Book>) repository.findAll();
+    }
+
+    public Book getBook(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("not found book"));
+    }
+
     public Book changeImage(Long id, MultipartFile file) throws ResourceNotFoundException, IOException {
         Book book = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("not found book"));

@@ -60,6 +60,15 @@ public class ClassroomService {
         repository.save(classroom);
     }
 
+    public List<Classroom> getAllClasses() {
+        return (List<Classroom>) repository.findAll();
+    }
+
+    public Classroom getClassroom(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
+    }
+
     public Set<UserClassroom> modifyUsersInClassroom(Long id, Set<UserClassroom> students) throws ResourceNotFoundException {
         classroom = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));

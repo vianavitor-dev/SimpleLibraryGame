@@ -15,4 +15,9 @@ public class Administrator extends User {
     public Administrator(String username, String password) {
         super(username, password);
     }
+
+    public Administrator(String username, String password, String name) {
+        super(username, password);
+        super.setName(name);
+    }
 }

@@ -29,9 +29,9 @@ public class ProfessorService implements ManageableUser<Professor> {
 
     @Override
     public Professor register(Professor entity) throws DuplicateResourceException {
-        boolean studentExists = repository.existsByUsername(entity.getUsername());
+        boolean professorExists = repository.existsByUsername(entity.getUsername());
 
-        if (studentExists) {
+        if (professorExists) {
             throw new DuplicateResourceException("username already in use");
         }
 
@@ -83,19 +83,19 @@ public class ProfessorService implements ManageableUser<Professor> {
 
     @Override
     public void deactivate(Long id) throws ResourceNotFoundException {
-        Professor student = repository.findById(id)
+        Professor professor = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
-        student.setActive(false);
-        repository.save(student);
+        professor.setActive(false);
+        repository.save(professor);
     }
 
     @Override
     public void activate(Long id) throws ResourceNotFoundException {
-        Professor student = repository.findById(id)
+        Professor professor = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("user not found"));
 
-        student.setActive(true);
-        repository.save(student);
+        professor.setActive(true);
+        repository.save(professor);
     }
 }
