@@ -31,21 +31,46 @@ public class SecurityConfig {
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
                 .authorizeHttpRequests(authorization -> authorization
-                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                        .requestMatchers("/api/students/register").permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/api/administrators/register").permitAll()
-                        .requestMatchers("/api/classrooms/**", "/api/administrators/**").hasRole("ADM")
-                        .requestMatchers("/api/students/**").hasAnyRole("ADM", "STUDENT")
-                        .requestMatchers("/api/groups/**", "/api/group-books/**").hasRole("STUDENT")
-                        .requestMatchers("/api/summaries/**").hasRole("STUDENT")
-                        .requestMatchers("/api/stats/**").hasRole("STUDENT")
-                        .requestMatchers(HttpMethod.GET, "/api/stats/**").hasRole("PROFESSOR")
-                        .requestMatchers(HttpMethod.GET, "/api/summaries/**").hasRole("PROFESSOR")
-                        .requestMatchers("/api/professors/**").hasAnyRole("ADM", "PROFESSOR")
-                        .requestMatchers("/api/librarians/**").hasAnyRole("ADM", "LIBRARIAN")
-                        .requestMatchers(HttpMethod.POST, "/api/books/**").hasRole("LIBRARIAN")
-                        .requestMatchers(HttpMethod.PUT, "/api/books/**").hasRole("LIBRARIAN")
                         .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+//                        ENDPOINTS PERMISSIONS:
+//                        * Students permissions
+                                .requestMatchers(HttpMethod.POST, "/api/students/register").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/students/**").hasAnyRole("ADM", "STUDENT", "PROFESSOR")
+                                .requestMatchers("/api/students/**").hasAnyRole("ADM", "STUDENT")
+
+//                        * Administrators permissions
+//                                .requestMatchers(HttpMethod.POST, "/api/administrators/register").permitAll()
+                                .requestMatchers("/api/administrators/**").hasRole("ADM")
+
+//                        * Professors permissions
+                                .requestMatchers("/api/professors/**").hasAnyRole("ADM", "PROFESSOR")
+
+//                        * Librarians permissions
+                                .requestMatchers("/api/librarians/**").hasAnyRole("ADM", "LIBRARIAN")
+
+//                        * Classrooms permissions
+                                .requestMatchers(HttpMethod.GET, "/api/classrooms/**").hasAnyRole("ADM", "PROFESSOR", "STUDENT")
+                                .requestMatchers("/api/classrooms/**").hasRole("ADM")
+
+//                        * Books permissions
+                                .requestMatchers(HttpMethod.POST, "/api/books/**").hasRole("LIBRARIAN")
+                                .requestMatchers(HttpMethod.PUT, "/api/books/**").hasRole("LIBRARIAN")
+
+//                        * Stats permissions
+                                .requestMatchers(HttpMethod.GET, "/api/stats/**").hasAnyRole("ADM", "PROFESSOR", "STUDENT")
+                                .requestMatchers("/api/stats/**").hasRole("STUDENT")
+
+//                        * Summaries permissions
+                                .requestMatchers(HttpMethod.GET, "/api/summaries/**").hasAnyRole("PROFESSOR", "STUDENT")
+                                .requestMatchers("/api/summaries/**").hasRole("STUDENT")
+
+//                        * History permissions
+                                .requestMatchers(HttpMethod.GET, "/api/read-history").hasAnyRole("PROFESSOR", "STUDENT")
+                                .requestMatchers(HttpMethod.POST, "/api/read-history").hasRole("STUDENT")
+
+//                        * Groups/Group-Books permissions
+                                .requestMatchers("/api/groups/**", "/api/group-books/**").hasRole("STUDENT")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
