@@ -70,37 +70,6 @@ public class LibrarianServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void testLogin() {
-        librarian = new Librarian("librarian_1", "passwd");
-        librarian.setId(1L);
-//        librarian.setActive(false);
-
-        String username = "librarian_1";
-        String password = "123";
-        LocalDate lastLoginAtBeginning = librarian.getLastLogin();
-        boolean validPassword = password.equals("123");
-
-        Mockito.when(encoder.matches(password, "passwd"))
-                .thenReturn(validPassword);
-
-        Mockito.when(repository.findByUsername("librarian_1"))
-                .thenReturn(Optional.of(librarian));
-
-        Mockito.when(repository.save(librarian))
-                .thenReturn(librarian);
-
-        Long id = service.login(username, password);
-
-        assertThat(id).isNotNull();
-        assertThat(id).isEqualTo(1L);
-        assertThat(lastLoginAtBeginning).isNotEqualTo(librarian.getLastLogin());
-
-        Mockito.verify(encoder, Mockito.times(1)).matches(password, "passwd");
-        Mockito.verify(repository, Mockito.times(1)).findByUsername("librarian_1");
-        Mockito.verify(repository, Mockito.times(1)).save(librarian);
-    }
-
-    @Test
     void testGetAll() {
         List<Librarian> list = new ArrayList<>();
         list.add(librarian);

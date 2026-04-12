@@ -4,6 +4,7 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.vianavitor.simplelibrarygame.dto.ApiResponse;
 import com.vianavitor.simplelibrarygame.dto.request.LoginRequest;
 import com.vianavitor.simplelibrarygame.model.utils.classes.User;
+import com.vianavitor.simplelibrarygame.repository.UserRepository;
 import com.vianavitor.simplelibrarygame.service.auth.AuthorizationService;
 import com.vianavitor.simplelibrarygame.service.auth.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthenticationController {
@@ -31,19 +34,27 @@ public class AuthenticationController {
     @Autowired
     private TokenService tokenService;
 
+    @Autowired
+    private UserRepository repository;
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> login(@RequestBody @Valid LoginRequest request, HttpServletRequest req)
             throws JWTCreationException, DisabledException, BadCredentialsException {
         var login = new UsernamePasswordAuthenticationToken(request.username(), request.password());
         var auth = authenticationManager.authenticate(login);
 
-        if (auth.getPrincipal() == null) {
+        User user = (User) auth.getPrincipal();
+
+        if (user == null) {
             return ResponseEntity
                     .internalServerError()
                     .body(ApiResponse.error("missing principal", req.getRequestURI()));
         }
 
-        String token = tokenService.generateToken((User) auth.getPrincipal());
+        user.setLastLogin(LocalDate.now());
+        repository.save(user);
+
+        String token = tokenService.generateToken(user);
         return ResponseEntity.ok(ApiResponse.success(token, "Login successful", req.getRequestURI()));
     }
 }

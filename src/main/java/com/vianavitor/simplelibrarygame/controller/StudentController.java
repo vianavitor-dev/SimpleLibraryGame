@@ -37,12 +37,6 @@ public class StudentController {
                 .body(ApiResponse.success(student, "Student registered", req.getRequestURI()));
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Long>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest req) {
-        Long id = studentService.login(request.username(), request.password());
-        return ResponseEntity.ok(ApiResponse.success(id, "Login successful", req.getRequestURI()));
-    }
-
     @GetMapping("/{id}/stats")
     public ResponseEntity<ApiResponse<StudentStats>> getStats(@PathVariable Long id, HttpServletRequest request) {
         StudentStats stats = studentService.getStats(id);

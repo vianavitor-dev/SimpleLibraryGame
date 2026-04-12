@@ -52,31 +52,6 @@ public class ProfessorService implements ManageableUser<Professor> {
         this.register(newProfessor);
     }
 
-    @Override
-    public Long login(String username, String password) throws InvalidOperationException, UserDeactivatedException {
-        Professor professor = (Professor) repository.findByUsername(username)
-                .orElseThrow(() -> new InvalidOperationException("invalid username or password"));
-
-        boolean invalidPassword = !encoder.matches(password, professor.getPassword());
-
-        if (invalidPassword) {
-            throw new InvalidOperationException("invalid username or password");
-        }
-
-        boolean wasUserDeactivated = !professor.isActive();
-        if (wasUserDeactivated) {
-            throw new UserDeactivatedException("this user was deactivated, talk with a professor or administrador to get more information");
-        }
-
-        // TODO: create JWT Token for authentication
-        // ...
-
-        professor.setLastLogin(LocalDate.now());
-        repository.save(professor);
-
-        return professor.getId();
-    }
-
     public List<Professor> getAll() {
         return (List<Professor>) repository.findAll();
     }

@@ -33,12 +33,6 @@ public class ProfessorController {
                 .body(ApiResponse.success(professor, "Professor registered", req.getRequestURI()));
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Long>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest req) {
-        Long id = professorService.login(request.username(), request.password());
-        return ResponseEntity.ok(ApiResponse.success(id, "Login successful", req.getRequestURI()));
-    }
-
     @GetMapping
     public ResponseEntity<ApiResponse<List<Professor>>> getAll(HttpServletRequest request) {
         List<Professor> professors = professorService.getAll();

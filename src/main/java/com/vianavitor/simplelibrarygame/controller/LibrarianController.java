@@ -26,13 +26,6 @@ public class LibrarianController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Long>> login(@RequestBody Map<String, String> credentials, HttpServletRequest request) {
-        Long id = librarianService.login(credentials.get("username"), credentials.get("password"));
-        ApiResponse<Long> response = ApiResponse.success(id, "Login successful", request.getRequestURI());
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping
     public ResponseEntity<ApiResponse<List<Librarian>>> getAll(HttpServletRequest request) {
         List<Librarian> librarians = librarianService.getAll();

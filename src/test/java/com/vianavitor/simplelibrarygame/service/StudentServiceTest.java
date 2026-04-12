@@ -125,37 +125,6 @@ class StudentServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void testLogin() {
-        student = new Student("student_1", "passwd");
-        student.setId(1L);
-//        student.setActive(false);
-
-        String username = "student_1";
-        String password = "123";
-        LocalDate lastLoginAtBeginning = student.getLastLogin();
-        boolean validPassword = password.equals("123");
-
-        Mockito.when(encoder.matches(password, "passwd"))
-                .thenReturn(validPassword);
-
-        Mockito.when(repository.findByUsername("student_1"))
-                .thenReturn(Optional.of(student));
-
-        Mockito.when(repository.save(student))
-                .thenReturn(student);
-
-        Long id = service.login(username, password);
-
-        assertThat(id).isNotNull();
-        assertThat(id).isEqualTo(1L);
-        assertThat(lastLoginAtBeginning).isNotEqualTo(student.getLastLogin());
-
-        Mockito.verify(encoder, Mockito.times(1)).matches(password, "passwd");
-        Mockito.verify(repository, Mockito.times(1)).findByUsername("student_1");
-        Mockito.verify(repository, Mockito.times(1)).save(student);
-    }
-
-    @Test
     void testGetAll() {
         List<Student> list = new ArrayList<>();
         list.add(student);

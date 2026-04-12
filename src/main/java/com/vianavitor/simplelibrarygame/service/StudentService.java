@@ -93,31 +93,6 @@ public class StudentService implements ManageableUser<Student> {
                 .orElseThrow(() -> new ResourceNotFoundException("not found student stats"));
     }
 
-    @Override
-    public Long login(String username, String password) throws InvalidOperationException, UserDeactivatedException{
-        Student student = (Student) repository.findByUsername(username)
-                .orElseThrow(() -> new InvalidOperationException("invalid username or password"));
-
-        boolean invalidPassword = !encoder.matches(password, student.getPassword());
-
-        if (invalidPassword) {
-            throw new InvalidOperationException("invalid username or password");
-        }
-
-        boolean wasUserDeactivated = !student.isActive();
-        if (wasUserDeactivated) {
-            throw new UserDeactivatedException("this user was deactivated, talk with a professor or administrador to get more information");
-        }
-
-        // TODO: create JWT Token for authentication
-        // ...
-
-        student.setLastLogin(LocalDate.now());
-        repository.save(student);
-
-        return student.getId();
-    }
-
     public List<Student> getAll() {
         return (List<Student>) repository.findAll();
     }

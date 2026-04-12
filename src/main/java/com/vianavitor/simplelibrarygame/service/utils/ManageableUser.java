@@ -6,7 +6,7 @@ public interface ManageableUser<T extends User> {
 
     T register(T entity);
 
-    Long login(String username, String password);
+//    Long login(String username, String password);
 
     void deactivate(Long id);
 

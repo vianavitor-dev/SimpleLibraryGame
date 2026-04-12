@@ -79,37 +79,6 @@ public class ProfessorServiceTest extends BaseServiceTest {
     }
 
     @Test
-    void testLogin() {
-        professor = new Professor("professor_1", "passwd");
-        professor.setId(1L);
-//        professor.setActive(false);
-
-        String username = "professor_1";
-        String password = "123";
-        LocalDate lastLoginAtBeginning = professor.getLastLogin();
-        boolean validPassword = password.equals("123");
-
-        Mockito.when(encoder.matches(password, "passwd"))
-                .thenReturn(validPassword);
-
-        Mockito.when(repository.findByUsername("professor_1"))
-                .thenReturn(Optional.of(professor));
-
-        Mockito.when(repository.save(professor))
-                .thenReturn(professor);
-
-        Long id = service.login(username, password);
-
-        assertThat(id).isNotNull();
-        assertThat(id).isEqualTo(1L);
-        assertThat(lastLoginAtBeginning).isNotEqualTo(professor.getLastLogin());
-
-        Mockito.verify(encoder, Mockito.times(1)).matches(password, "passwd");
-        Mockito.verify(repository, Mockito.times(1)).findByUsername("professor_1");
-        Mockito.verify(repository, Mockito.times(1)).save(professor);
-    }
-
-    @Test
     void testGetAll() {
         List<Professor> list = new ArrayList<>();
         list.add(professor);

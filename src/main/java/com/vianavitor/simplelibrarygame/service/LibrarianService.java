@@ -37,31 +37,6 @@ public class LibrarianService implements ManageableUser<Librarian> {
         return repository.save(entity);
     }
 
-    @Override
-    public Long login(String username, String password) throws InvalidOperationException, UserDeactivatedException{
-        Librarian librarian = (Librarian) repository.findByUsername(username)
-                .orElseThrow(() -> new InvalidOperationException("invalid username or password"));
-
-        boolean invalidPassword = !encoder.matches(password, librarian.getPassword());
-
-        if (invalidPassword) {
-            throw new InvalidOperationException("invalid username or password");
-        }
-
-        boolean wasUserDeactivated = !librarian.isActive();
-        if (wasUserDeactivated) {
-            throw new UserDeactivatedException("this user was deactivated, talk with a professor or administrador to get more information");
-        }
-
-        // TODO: create JWT Token for authentication
-        // ...
-
-        librarian.setLastLogin(LocalDate.now());
-        repository.save(librarian);
-
-        return librarian.getId();
-    }
-
     public List<Librarian> getAll() {
         return (List<Librarian>) repository.findAll();
     }
