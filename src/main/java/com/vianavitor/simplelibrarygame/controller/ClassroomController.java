@@ -54,7 +54,7 @@ public class ClassroomController {
             @Valid @RequestBody ModifyUsersInClassroomRequest request,
             HttpServletRequest req
     ) {
-        Set<UserClassroom> updated = classroomService.modifyUsersInClassroom(id, request.users());
+        Set<UserClassroom> updated = classroomService.modifyUsersInClassroom(id, request.userIds());
         return ResponseEntity.ok(ApiResponse.success(updated, "Users updated", req.getRequestURI()));
     }
 

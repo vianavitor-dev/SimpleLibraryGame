@@ -1,21 +1,22 @@
 package com.vianavitor.simplelibrarygame.service;
 
 import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
+import com.vianavitor.simplelibrarygame.exception.InvalidOperationException;
 import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.Classroom;
 import com.vianavitor.simplelibrarygame.model.Professor;
 import com.vianavitor.simplelibrarygame.model.Student;
+import com.vianavitor.simplelibrarygame.model.utils.classes.User;
 import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import com.vianavitor.simplelibrarygame.repository.ClassroomRepository;
 import com.vianavitor.simplelibrarygame.repository.ProfessorRepository;
 import com.vianavitor.simplelibrarygame.repository.StudentRepository;
+import com.vianavitor.simplelibrarygame.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class ClassroomService {
@@ -28,6 +29,9 @@ public class ClassroomService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     private Classroom classroom;
 
@@ -43,6 +47,17 @@ public class ClassroomService {
         this.repository = repository;
         this.professorRepository = professorRepository;
         this.studentRepository = studentRepository;
+        this.classroom = classroom;
+    }
+
+    public ClassroomService(
+            ClassroomRepository repository, ProfessorRepository professorRepository,
+            StudentRepository studentRepository, UserRepository userRepository, Classroom classroom
+    ) {
+        this.repository = repository;
+        this.professorRepository = professorRepository;
+        this.studentRepository = studentRepository;
+        this.userRepository = userRepository;
         this.classroom = classroom;
     }
 
@@ -71,11 +86,30 @@ public class ClassroomService {
                 .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
     }
 
-    public Set<UserClassroom> modifyUsersInClassroom(Long id, Set<UserClassroom> students) throws ResourceNotFoundException {
+    public Set<UserClassroom> modifyUsersInClassroom(Long id, Set<Long> userIds) throws ResourceNotFoundException, IllegalArgumentException {
         classroom = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
 
-        classroom.setUsers(students);
+        Set<UserClassroom> classroomUsers = new HashSet<>();
+        Iterator<Long> iterator = userIds.iterator();
+        Long current = iterator.next();
+        
+        while (current != null) {
+            User user = userRepository.findById(current)
+                    .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
+
+            if (!(user instanceof Professor) && !(user instanceof Student)) {
+                throw new IllegalArgumentException("non supported user type: " + user.getClass().getSimpleName());
+            }
+
+            classroomUsers.add((UserClassroom) user);
+
+            if (!iterator.hasNext()) break;
+
+            current = iterator.next();
+        }
+        
+        classroom.setUsers(classroomUsers);
         return repository.save(classroom).getUsers();
     }
 
@@ -85,7 +119,7 @@ public class ClassroomService {
 
         boolean exists = repository.findByName(name).isPresent();
         if (exists) {
-            throw new DuplicateResourceException("this classroom already exists");
+            throw new DuplicateResourceException("a classroom with this name already exists");
         }
 
         classroom.setName(name);
