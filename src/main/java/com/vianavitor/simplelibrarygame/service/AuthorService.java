@@ -18,7 +18,9 @@ public class AuthorService {
     private Author author;
 
     @Autowired
-    public AuthorService() {}
+    public AuthorService() {
+        this.author = new Author();
+    }
 
     public AuthorService(AuthorRepository repository, Author author) {
         this.repository = repository;

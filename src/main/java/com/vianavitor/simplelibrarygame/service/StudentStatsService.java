@@ -38,7 +38,10 @@ public class StudentStatsService {
     private BookReadHistory history;
 
     @Autowired
-    public StudentStatsService() {}
+    public StudentStatsService() {
+        this.stats = new StudentStats();
+        this.history = new BookReadHistory();
+    }
 
     public StudentStatsService(
             StudentStatsRepository repository, StudentRepository studentRepository,

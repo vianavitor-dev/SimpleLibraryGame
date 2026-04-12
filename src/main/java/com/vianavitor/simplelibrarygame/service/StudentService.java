@@ -37,7 +37,9 @@ public class StudentService implements ManageableUser<Student> {
     private StudentStats stats;
 
     @Autowired
-    public StudentService() {}
+    public StudentService() {
+        this.stats = new StudentStats();
+    }
 
     public StudentService(
             StudentRepository repository, StudentStatsRepository statsRepository,

@@ -28,7 +28,9 @@ public class GroupOfBookService {
     private GroupOfBook groupOfBook;
 
     @Autowired
-    public GroupOfBookService() {}
+    public GroupOfBookService() {
+        this.groupOfBook = new GroupOfBook();
+    }
 
     public GroupOfBookService(
             GroupOfBookRepository repository, BookRepository bookRepository,

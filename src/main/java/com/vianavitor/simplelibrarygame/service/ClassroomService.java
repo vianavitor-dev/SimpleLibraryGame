@@ -32,7 +32,9 @@ public class ClassroomService {
     private Classroom classroom;
 
     @Autowired
-    public ClassroomService() { }
+    public ClassroomService() {
+        this.classroom = new Classroom();
+    }
 
     public ClassroomService(
             ClassroomRepository repository, ProfessorRepository professorRepository,
