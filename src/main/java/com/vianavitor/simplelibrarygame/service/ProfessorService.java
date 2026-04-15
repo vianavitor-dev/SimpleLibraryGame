@@ -5,6 +5,7 @@ import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
 import com.vianavitor.simplelibrarygame.exception.InvalidOperationException;
 import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.exception.UserDeactivatedException;
+import com.vianavitor.simplelibrarygame.model.Classroom;
 import com.vianavitor.simplelibrarygame.model.Professor;
 import com.vianavitor.simplelibrarygame.repository.ClassroomRepository;
 import com.vianavitor.simplelibrarygame.repository.ProfessorRepository;
@@ -42,14 +43,14 @@ public class ProfessorService implements ManageableUser<Professor> {
     }
 
     public void register(Professor newProfessor, String classroomCode) throws DuplicateResourceException, ResourceNotFoundException {
-        classroomRepository.findByPublicCode(classroomCode)
-                .ifPresentOrElse((classroom ->
-                        newProfessor.getClassrooms().add(classroom)
-                ), () -> {
-                    throw new ResourceNotFoundException("not found classroom");
-                });
+        Classroom classroom = classroomRepository.findByPublicCode(classroomCode)
+                        .orElseThrow(() -> new ResourceNotFoundException("not found classroom"));
 
-        this.register(newProfessor);
+        Professor professor = this.register(newProfessor);
+        classroom.getUsers().add(professor);
+
+        classroomRepository.save(classroom);
+//        newProfessor.getClassrooms().add(classroom);
     }
 
     public List<Professor> getAll() {

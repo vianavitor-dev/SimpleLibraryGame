@@ -67,4 +67,7 @@ public class GlobalExceptionHandler {
         ApiResponse<Void> response = ApiResponse.error(ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
+//    TODO: handle the JWT token expired exception with a redirection
+//    TODO: handle the IllegalArgumentException in ClassroomService or create another Exception to match the error
 }

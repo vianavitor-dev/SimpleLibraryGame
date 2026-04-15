@@ -33,6 +33,7 @@ public class StudentController {
 
         studentService.register(student, request.classroomCode(), request.favoriteGenres());
 
+        // TODO: many to many relationship is creating a loop in the response, fix it
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(student, "Student registered", req.getRequestURI()));
     }

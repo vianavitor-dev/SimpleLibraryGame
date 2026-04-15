@@ -5,6 +5,7 @@ import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
 import com.vianavitor.simplelibrarygame.exception.InvalidOperationException;
 import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.exception.UserDeactivatedException;
+import com.vianavitor.simplelibrarygame.model.Classroom;
 import com.vianavitor.simplelibrarygame.model.Genre;
 import com.vianavitor.simplelibrarygame.model.Student;
 import com.vianavitor.simplelibrarygame.model.StudentStats;
@@ -68,20 +69,22 @@ public class StudentService implements ManageableUser<Student> {
     }
 
     public void register(Student newStudent, String classroomCode, Set<Genre> favoriteGenres) throws DuplicateResourceException, ResourceNotFoundException {
-        classroomRepository.findByPublicCode(classroomCode)
-                .ifPresentOrElse((classroom ->
-                        newStudent.getClassrooms().add(classroom)
-                ), () -> {
-                    throw new ResourceNotFoundException("not found classroom");
-                });
+        Classroom classroom = classroomRepository.findByPublicCode(classroomCode)
+                .orElseThrow(() -> new ResourceNotFoundException("not found classroom"));
 
         newStudent.setFavoriteGenre(favoriteGenres);
         Student student = this.register(newStudent);
 
         stats.setUser(student);
+        stats.setLevel(1);
+        stats.setMaxLvlExperience(150);
         stats = statsRepository.save(stats);
 
+        classroom.getUsers().add(student);
+        classroomRepository.save(classroom);
+
         student.setStats(stats);
+        student.getClassrooms().add(classroom);
         repository.save(student);
     }
 

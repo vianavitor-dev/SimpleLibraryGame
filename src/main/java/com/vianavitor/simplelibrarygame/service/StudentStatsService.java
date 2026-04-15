@@ -78,6 +78,8 @@ public class StudentStatsService {
         }
 
         stats.setUser(student);
+        stats.setLevel(1);
+        stats.setMaxLvlExperience(150);
         stats = repository.save(stats);
 
         student.setStats(stats);
