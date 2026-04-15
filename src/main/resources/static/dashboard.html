@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Gamified Reading Platform</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #1e3c72; border-left: 5px solid #ff9800; padding-left: 15px; }
+        .login-card, .dashboard-card {
+            background: white; border-radius: 20px; padding: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
+        }
+        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
+        .flex-row > div { flex: 1; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select, textarea {
+            width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ced4da;
+            border-radius: 8px;
+        }
+        button {
+            background: #1e3c72; color: white; border: none; padding: 8px 18px;
+            margin-top: 15px; border-radius: 30px; cursor: pointer; font-weight: bold;
+        }
+        button:hover { background: #ff9800; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
+        .tab-btn { background: #e9ecef; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; }
+        .tab-btn.active { background: #1e3c72; color: white; }
+        .tab-content { display: none; background: white; padding: 20px; border-radius: 16px; margin-top: 15px; }
+        .tab-content.active { display: block; }
+        .response { background: #e9ecef; padding: 10px; border-radius: 8px; margin-top: 15px; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
+        .badge { display: inline-block; background: #ff9800; color: white; padding: 2px 8px; border-radius: 20px; font-size: 12px; margin-left: 10px; }
+        hr { margin: 20px 0; }
+        .card { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #ff9800; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>📚 Gamified Reading Platform <span id="roleBadge" class="badge"></span></h1>
+
+    <!-- LOGIN SECTION -->
+    <div id="loginSection" class="login-card">
+        <h3>🔐 Login</h3>
+        <div class="flex-row">
+            <div><label>Username</label><input type="text" id="loginUsername" placeholder="username"></div>
+            <div><label>Password</label><input type="password" id="loginPassword" placeholder="password"></div>
+            <div><button onclick="login()">Login</button></div>
+        </div>
+        <div id="loginResponse" class="response"></div>
+    </div>
+
+    <!-- DASHBOARD (hidden until login) -->
+    <div id="dashboard" style="display: none;">
+        <div class="tabs" id="tabsContainer"></div>
+        <div id="tabContents"></div>
+    </div>
+</div>
+
+<script>
+    let authToken = null;
+    let currentRole = null;
+    let userId = null;
+
+    // Helper: decode JWT to get userId and role (adjust claims as per your TokenService)
+    function decodeToken(token) {
+        try {
+            const decoded = jwt_decode(token);
+            console.log(decoded);
+            // Assuming your token contains "sub" (user id) and "role" or "authorities"
+            // You may need to adjust these property names
+            return {
+                userId: decoded.sub || decoded.userId || decoded.id,
+                role: (decoded.role || decoded.authorities || '').replace("ROLE_","").toLowerCase()
+            };
+        } catch(e) {
+            console.error("Token decode failed", e);
+            return null;
+        }
+    }
+
+    // API helper with JWT
+    async function apiCall(method, url, body = null) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+        const options = { method, headers };
+        if (body) options.body = JSON.stringify(body);
+
+        const response = await fetch(url, options);
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Expected JSON but got: ${text.substring(0, 100)}`);
+        }
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+        return data;
+    }
+
+    function showResponse(divId, data, error = null) {
+        const div = document.getElementById(divId);
+        if (error) div.innerHTML = `❌ Error: ${error}`;
+        else div.innerHTML = `✅ Success: ${JSON.stringify(data, null, 2)}`;
+    }
+
+    // ---------- LOGIN ----------
+    async function login() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        if (!username || !password) return alert('Fill username and password');
+
+        try {
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Login failed');
+
+            // ApiResponse format: { success, message, data, timestamp, path }
+            const token = data.data;  // the JWT string
+            if (!token) throw new Error('No token in response');
+
+            authToken = token;
+            const decoded = decodeToken(token);
+            if (!decoded) throw new Error('Could not decode token');
+            userId = decoded.userId;
+            currentRole = decoded.role;
+            if (!userId || !currentRole) throw new Error('Token missing userId or role');
+
+            document.getElementById('roleBadge').innerText = currentRole.toUpperCase();
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadDashboard();
+        } catch (err) {
+            showResponse('loginResponse', null, err.message);
+        }
+    }
+
+    // ---------- DYNAMIC UI BASED ON ROLE ----------
+    function loadDashboard() {
+        const tabsContainer = document.getElementById('tabsContainer');
+        const tabContents = document.getElementById('tabContents');
+        tabsContainer.innerHTML = '';
+        tabContents.innerHTML = '';
+
+        let tabs = [];
+        if (currentRole === 'student') {
+            tabs = [
+                { id: 'profile', label: '👤 Profile & Stats' },
+                { id: 'books', label: '📖 Books & Reading' },
+                { id: 'groups', label: '👥 Reading Groups' },
+                { id: 'summaries', label: '📝 My Summaries' },
+                { id: 'history', label: '📚 Reading History' }
+            ];
+        } else if (currentRole === 'professor') {
+            tabs = [
+                { id: 'students', label: '👩‍🎓 Students Overview' },
+                { id: 'summaries', label: '📄 Student Summaries' },
+                { id: 'stats', label: '📊 Class Stats' }
+            ];
+        } else if (currentRole === 'librarian') {
+            tabs = [
+                { id: 'books', label: '📚 Manage Books' },
+                { id: 'authors', label: '✍️ Authors' }
+            ];
+        } else if (currentRole === 'adm') {
+            tabs = [
+                { id: 'users', label: '👥 Manage Users' },
+                { id: 'classrooms', label: '🏫 Manage Classes' }
+            ];
+        }
+
+        tabs.forEach(tab => {
+            const btn = document.createElement('button');
+            btn.className = 'tab-btn';
+            btn.innerText = tab.label;
+            btn.onclick = () => switchTab(tab.id);
+            tabsContainer.appendChild(btn);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.id = `tab-${tab.id}`;
+            contentDiv.className = 'tab-content';
+            tabContents.appendChild(contentDiv);
+        });
+
+        if (tabs.length) switchTab(tabs[0].id);
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        const activeContent = document.getElementById(`tab-${tabId}`);
+        if (activeContent) activeContent.classList.add('active');
+        if (event && event.target) event.target.classList.add('active');
+
+        if (activeContent && activeContent.innerHTML.trim() === '') {
+            if (currentRole === 'student') renderStudentTab(tabId, activeContent);
+            else if (currentRole === 'professor') renderProfessorTab(tabId, activeContent);
+            else if (currentRole === 'librarian') renderLibrarianTab(tabId, activeContent);
+            else if (currentRole === 'adm') renderAdminTab(tabId, activeContent);
+        }
+    }
+
+    // ------------------------- STUDENT -------------------------
+    function renderStudentTab(tabId, container) {
+        if (tabId === 'profile') {
+            container.innerHTML = `
+                <div class="card"><h3>📊 My Stats</h3>
+                <button onclick="fetchStudentStats()">Refresh Stats</button>
+                <div id="statsResponse" class="response"></div>
+                <hr>
+                <h3>🔥 Reading Streak</h3>
+                <button onclick="updateStreak()">Update Streak</button>
+                <div id="streakResponse" class="response"></div>
+                </div>`;
+        } else if (tabId === 'books') {
+            container.innerHTML = `
+                <div class="card"><h3>🔍 Search Books</h3>
+                <input type="text" id="searchTitle" placeholder="Book title"><button onclick="searchBooks()">Search</button>
+                <div id="searchResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>📖 Start / Update Reading</h3>
+                <label>Book ID</label><input type="number" id="readingBookId">
+                <label>Last Page Read</label><input type="number" id="readingPage" value="0">
+                <button onclick="setCurrentBook()">Save Progress</button>
+                <div id="readingResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>⭐ Rate a Book</h3>
+                <label>Book ID</label><input type="number" id="rateBookId">
+                <label>Rating (1-5)</label><input type="number" id="rateValue" min="1" max="5">
+                <button onclick="rateBook()">Rate</button>
+                <div id="rateResponse" class="response"></div>
+                </div>`;
+        } else if (tabId === 'groups') {
+            container.innerHTML = `
+                <div class="card"><h3>➕ Create Group</h3>
+                <label>Group Name</label><input type="text" id="groupName">
+                <button onclick="createGroup()">Create</button>
+                <div id="createGroupResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>📋 My Groups</h3>
+                <button onclick="fetchMyGroups()">Load</button>
+                <div id="groupsList" class="response"></div>
+                </div>
+                <div class="card"><h3>📚 Add Book to Group</h3>
+                <label>Group ID</label><input type="number" id="addToGroupId">
+                <label>Book ID</label><input type="number" id="addBookToGroupId">
+                <button onclick="addBookToGroup()">Add</button>
+                <div id="addBookGroupResponse" class="response"></div>
+                </div>`;
+        } else if (tabId === 'summaries') {
+            container.innerHTML = `
+                <div class="card"><h3>✍️ Submit Book Summary</h3>
+                <label>Book ID</label><input type="number" id="summaryBookId">
+                <label>Your summary</label><textarea id="summaryText" rows="3"></textarea>
+                <button onclick="submitSummary()">Submit</button>
+                <div id="summaryResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>📄 My Summaries</h3>
+                <button onclick="fetchMySummaries()">Load</button>
+                <div id="mySummaries" class="response"></div>
+                </div>`;
+        } else if (tabId === 'history') {
+            container.innerHTML = `<div class="card"><h3>📚 My Reading History</h3>
+                <button onclick="fetchReadingHistory()">Load</button>
+                <div id="historyResponse" class="response"></div></div>`;
+        }
+    }
+
+    // Student API calls (matching exact controller endpoints)
+    async function fetchStudentStats() {
+        try { const data = await apiCall('GET', `/api/stats/${userId}`); showResponse('statsResponse', data); }
+        catch(e) { showResponse('statsResponse', null, e.message); }
+    }
+    async function updateStreak() {
+        try { const data = await apiCall('POST', `/api/stats/${userId}/streak`); showResponse('streakResponse', data); }
+        catch(e) { showResponse('streakResponse', null, e.message); }
+    }
+    async function searchBooks() {
+        const title = document.getElementById('searchTitle').value;
+        if(!title) return;
+        // BookController has @GetMapping("/") with optional title? Actually it's getAllBooks without filter.
+        // We'll use a custom endpoint? Not defined. We'll just fetch all.
+        try { const data = await apiCall('GET', `/api/books/`); showResponse('searchResponse', data); }
+        catch(e) { showResponse('searchResponse', null, e.message); }
+    }
+    async function setCurrentBook() {
+        const bookId = document.getElementById('readingBookId').value;
+        const page = document.getElementById('readingPage').value;
+        const body = { userId, bookId: parseInt(bookId), page: parseInt(page) };
+        try { const data = await apiCall('POST', '/api/stats/set-current-book', body); showResponse('readingResponse', data); }
+        catch(e) { showResponse('readingResponse', null, e.message); }
+    }
+    async function rateBook() {
+        const bookId = document.getElementById('rateBookId').value;
+        const rate = document.getElementById('rateValue').value;
+        try { const data = await apiCall('POST', `/api/books/${bookId}/rate`, { rate: parseInt(rate) }); showResponse('rateResponse', data); }
+        catch(e) { showResponse('rateResponse', null, e.message); }
+    }
+    async function createGroup() {
+        const name = document.getElementById('groupName').value;
+        const body = { name, studentId: userId };
+        try { const data = await apiCall('POST', '/api/groups', body); showResponse('createGroupResponse', data); }
+        catch(e) { showResponse('createGroupResponse', null, e.message); }
+    }
+    async function fetchMyGroups() {
+        try { const data = await apiCall('GET', `/api/groups/student/${userId}`); showResponse('groupsList', data); }
+        catch(e) { showResponse('groupsList', null, e.message); }
+    }
+    async function addBookToGroup() {
+        const groupId = document.getElementById('addToGroupId').value;
+        const bookId = document.getElementById('addBookToGroupId').value;
+        try { const data = await apiCall('POST', `/api/group-books/add?groupId=${groupId}&bookId=${bookId}`); showResponse('addBookGroupResponse', data); }
+        catch(e) { showResponse('addBookGroupResponse', null, e.message); }
+    }
+    async function submitSummary() {
+        const bookId = document.getElementById('summaryBookId').value;
+        const text = document.getElementById('summaryText').value;
+        const body = { text, bookId: parseInt(bookId), studentId: userId };
+        try { const data = await apiCall('POST', '/api/summaries', body); showResponse('summaryResponse', data); }
+        catch(e) { showResponse('summaryResponse', null, e.message); }
+    }
+    async function fetchMySummaries() {
+        try { const data = await apiCall('GET', `/api/summaries/student/${userId}`); showResponse('mySummaries', data); }
+        catch(e) { showResponse('mySummaries', null, e.message); }
+    }
+    async function fetchReadingHistory() {
+        try { const data = await apiCall('GET', `/api/read-history/student/${userId}`); showResponse('historyResponse', data); }
+        catch(e) { showResponse('historyResponse', null, e.message); }
+    }
+
+    // ------------------------- PROFESSOR -------------------------
+    function renderProfessorTab(tabId, container) {
+        if (tabId === 'students') {
+            container.innerHTML = `<div class="card"><h3>👩‍🎓 All Students</h3>
+                <button onclick="fetchAllStudents()">Load</button>
+                <div id="studentsList" class="response"></div></div>`;
+        } else if (tabId === 'summaries') {
+            container.innerHTML = `<div class="card"><h3>📄 Student Summaries (by Book)</h3>
+                <label>Book ID</label><input type="number" id="profBookId">
+                <button onclick="fetchSummariesByBook()">Load</button>
+                <div id="profSummaries" class="response"></div></div>`;
+        } else if (tabId === 'stats') {
+            container.innerHTML = `<div class="card"><h3>📊 Student Stats (by Student ID)</h3>
+                <label>Student ID</label><input type="number" id="targetStudentId">
+                <button onclick="fetchStudentStatsById()">Load</button>
+                <div id="profStatsResponse" class="response"></div></div>`;
+        }
+    }
+    async function fetchAllStudents() {
+        try { const data = await apiCall('GET', '/api/students'); showResponse('studentsList', data); }
+        catch(e) { showResponse('studentsList', null, e.message); }
+    }
+    async function fetchSummariesByBook() {
+        const bookId = document.getElementById('profBookId').value;
+        try { const data = await apiCall('GET', `/api/summaries/book/${bookId}`); showResponse('profSummaries', data); }
+        catch(e) { showResponse('profSummaries', null, e.message); }
+    }
+    async function fetchStudentStatsById() {
+        const sid = document.getElementById('targetStudentId').value;
+        try { const data = await apiCall('GET', `/api/stats/${sid}`); showResponse('profStatsResponse', data); }
+        catch(e) { showResponse('profStatsResponse', null, e.message); }
+    }
+
+    // ------------------------- LIBRARIAN -------------------------
+    function renderLibrarianTab(tabId, container) {
+        if (tabId === 'books') {
+            container.innerHTML = `
+                <div class="card"><h3>➕ Add Book (with authors & genres)</h3>
+                <label>Title</label><input type="text" id="librarianTitle">
+                <label>Synopsis</label><textarea id="librarianSynopsis"></textarea>
+                <label>Pages</label><input type="number" id="librarianPages">
+                <label>Release Date</label><input type="date" id="librarianRelease">
+                <label>Authors (comma names)</label><input id="librarianAuthors" placeholder="J.K. Rowling, George Orwell">
+                <label>Genres (comma names)</label><input id="librarianGenres" placeholder="Fantasy, Fiction">
+                <label>Confirmed (skip duplicate title check)</label><input type="checkbox" id="librarianConfirmed">
+                <button onclick="addBookByLibrarian()">Add Book</button>
+                <div id="librarianAddResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>✏️ Update Book Availability</h3>
+                <label>Book ID</label><input type="number" id="updateBookId">
+                <label>Available?</label><select id="availableStatus"><option value="true">Yes</option><option value="false">No</option></select>
+                <button onclick="updateBookAvailability()">Update</button>
+                <div id="availabilityResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>📖 List All Books</h3>
+                <button onclick="listAllBooks()">Load</button>
+                <div id="allBooksResponse" class="response"></div>
+                </div>`;
+        } else if (tabId === 'authors') {
+            container.innerHTML = `<div class="card"><h3>✍️ Add Author</h3>
+                <label>Author Name</label><input type="text" id="authorName">
+                <button onclick="addAuthor()">Add</button>
+                <div id="authorResponse" class="response"></div>
+                <hr><button onclick="listAuthors()">List All Authors</button>
+                <div id="authorsList" class="response"></div></div>`;
+        }
+    }
+    async function addBookByLibrarian() {
+        const title = document.getElementById('librarianTitle').value;
+        const synopsis = document.getElementById('librarianSynopsis').value;
+        const pages = parseInt(document.getElementById('librarianPages').value);
+        const releasedAt = document.getElementById('librarianRelease').value;
+        const authorsStr = document.getElementById('librarianAuthors').value;
+        const genresStr = document.getElementById('librarianGenres').value;
+        const confirmed = document.getElementById('librarianConfirmed').checked;
+        const authors = authorsStr.split(',').filter(s=>s.trim()).map(s => ({ name: s.trim() }));
+        const genres = genresStr.split(',').filter(s=>s.trim()).map(s => ({ name: s.trim() }));
+        const bookInfo = { title, synopsis, authors, genres, pages, releasedAt };
+        const body = { book: bookInfo, confirmed };
+        try {
+            const data = await apiCall('POST', '/api/books', body);
+            showResponse('librarianAddResponse', data);
+        } catch(e) { showResponse('librarianAddResponse', null, e.message); }
+    }
+    async function updateBookAvailability() {
+        const id = document.getElementById('updateBookId').value;
+        const available = document.getElementById('availableStatus').value === 'true';
+        try { const data = await apiCall('PATCH', `/api/books/${id}/available?available=${available}`); showResponse('availabilityResponse', data); }
+        catch(e) { showResponse('availabilityResponse', null, e.message); }
+    }
+    async function listAllBooks() {
+        try { const data = await apiCall('GET', '/api/books/'); showResponse('allBooksResponse', data); }
+        catch(e) { showResponse('allBooksResponse', null, e.message); }
+    }
+    async function addAuthor() {
+        const name = document.getElementById('authorName').value;
+        try { const data = await apiCall('POST', '/api/authors', { name }); showResponse('authorResponse', data); }
+        catch(e) { showResponse('authorResponse', null, e.message); }
+    }
+    async function listAuthors() {
+        try { const data = await apiCall('GET', '/api/authors'); showResponse('authorsList', data); }
+        catch(e) { showResponse('authorsList', null, e.message); }
+    }
+
+    // ------------------------- ADMINISTRATOR -------------------------
+    function renderAdminTab(tabId, container) {
+        if (tabId === 'users') {
+            container.innerHTML = `<div class="card"><h3>👥 Register New User (Professor/Librarian)</h3>
+                <label>Role</label><select id="adminRole"><option value="professor">Professor</option><option value="librarian">Librarian</option></select>
+                <label>Username</label><input id="adminUsername">
+                <label>Password</label><input type="password" id="adminPassword">
+                <label>Name (optional)</label><input id="adminName">
+                <label>Classroom Code (for professor)</label><input id="adminClassroomCode">
+                <button onclick="registerUserByAdmin()">Register</button>
+                <div id="adminRegisterResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>👥 Register Administrator</h3>
+                <label>Username</label><input id="adminUsername2">
+                <label>Password</label><input type="password" id="adminPassword2">
+                <label>Name</label><input id="adminName2">
+                <button onclick="registerAdministrator()">Register Admin</button>
+                <div id="adminRegisterResponse2" class="response"></div>
+                </div>`;
+        } else if (tabId === 'classrooms') {
+            container.innerHTML = `<div class="card"><h3>🏫 Create Classroom</h3>
+                <label>Classroom Name</label><input id="className">
+                <button onclick="createClassroom()">Create</button>
+                <div id="classroomResponse" class="response"></div>
+                </div>
+                <div class="card"><h3>📋 List All Classrooms</h3>
+                <button onclick="listAllClassrooms()">Load</button>
+                <div id="allClassroomsResponse" class="response"></div>
+                </div>`;
+        }
+    }
+    async function registerUserByAdmin() {
+        const role = document.getElementById('adminRole').value;
+        const username = document.getElementById('adminUsername').value;
+        const password = document.getElementById('adminPassword').value;
+        const name = document.getElementById('adminName').value;
+        const classroomCode = document.getElementById('adminClassroomCode').value;
+        const userData = { username, password, name };
+        let url, body;
+        if (role === 'professor') {
+            url = '/api/professors/register';
+            body = { professor: userData, classroomCode };
+        } else {
+            url = '/api/librarians/register';
+            body = userData;  // Librarian expects raw Librarian object (with username, password, name)
+        }
+        try { const data = await apiCall('POST', url, body); showResponse('adminRegisterResponse', data); }
+        catch(e) { showResponse('adminRegisterResponse', null, e.message); }
+    }
+    async function registerAdministrator() {
+        const username = document.getElementById('adminUsername2').value;
+        const password = document.getElementById('adminPassword2').value;
+        const name = document.getElementById('adminName2').value;
+        const body = { username, password, name };
+        try { const data = await apiCall('POST', '/api/administrators/register', body); showResponse('adminRegisterResponse2', data); }
+        catch(e) { showResponse('adminRegisterResponse2', null, e.message); }
+    }
+    async function createClassroom() {
+        const name = document.getElementById('className').value;
+        try { const data = await apiCall('POST', `/api/classrooms?name=${encodeURIComponent(name)}`); showResponse('classroomResponse', data); }
+        catch(e) { showResponse('classroomResponse', null, e.message); }
+    }
+    async function listAllClassrooms() {
+        try { const data = await apiCall('GET', '/api/classrooms/'); showResponse('allClassroomsResponse', data); }
+        catch(e) { showResponse('allClassroomsResponse', null, e.message); }
+    }
+
+    // expose all functions to global scope
+    window.login = login;
+    window.fetchStudentStats = fetchStudentStats;
+    window.updateStreak = updateStreak;
+    window.searchBooks = searchBooks;
+    window.setCurrentBook = setCurrentBook;
+    window.rateBook = rateBook;
+    window.createGroup = createGroup;
+    window.fetchMyGroups = fetchMyGroups;
+    window.addBookToGroup = addBookToGroup;
+    window.submitSummary = submitSummary;
+    window.fetchMySummaries = fetchMySummaries;
+    window.fetchReadingHistory = fetchReadingHistory;
+    window.fetchAllStudents = fetchAllStudents;
+    window.fetchSummariesByBook = fetchSummariesByBook;
+    window.fetchStudentStatsById = fetchStudentStatsById;
+    window.addBookByLibrarian = addBookByLibrarian;
+    window.updateBookAvailability = updateBookAvailability;
+    window.listAllBooks = listAllBooks;
+    window.addAuthor = addAuthor;
+    window.listAuthors = listAuthors;
+    window.registerUserByAdmin = registerUserByAdmin;
+    window.registerAdministrator = registerAdministrator;
+    window.createClassroom = createClassroom;
+    window.listAllClassrooms = listAllClassrooms;
+</script>
+</body>
+</html>

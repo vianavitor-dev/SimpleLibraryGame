@@ -32,6 +32,8 @@ public class SecurityConfig {
                 })
                 .authorizeHttpRequests(authorization -> authorization
                         .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/dashboard.html").permitAll()
+                        .requestMatchers("/static/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
 //                        ENDPOINTS PERMISSIONS:
 //                        * Students permissions
