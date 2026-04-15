@@ -16,8 +16,8 @@ public class Classroom {
     @ManyToMany()
     @JoinTable(
             name = "user_classroom",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "classroom_id")
+            joinColumns = @JoinColumn(name = "classroom_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<UserClassroom> usersInClassroom = new HashSet<>();
 
