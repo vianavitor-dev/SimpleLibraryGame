@@ -50,7 +50,7 @@ public class ProfessorService implements ManageableUser<Professor> {
         classroom.getUsers().add(professor);
 
         classroomRepository.save(classroom);
-//        newProfessor.getClassrooms().add(classroom);
+        newProfessor.getClassrooms().add(classroom);
     }
 
     public List<Professor> getAll() {
