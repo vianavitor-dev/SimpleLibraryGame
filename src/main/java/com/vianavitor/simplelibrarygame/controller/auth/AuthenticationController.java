@@ -52,7 +52,7 @@ public class AuthenticationController {
         }
 
         user.setLastLogin(LocalDate.now());
-        repository.save(user);
+        user = repository.save(user);
 
         String token = tokenService.generateToken(user);
         return ResponseEntity.ok(ApiResponse.success(token, "Login successful", req.getRequestURI()));
