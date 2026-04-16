@@ -7,6 +7,7 @@ import com.vianavitor.simplelibrarygame.exception.UnsupportedFileTypeException;
 import com.vianavitor.simplelibrarygame.model.Author;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.Genre;
+import com.vianavitor.simplelibrarygame.model.utils.fields.ReadingLevel;
 import com.vianavitor.simplelibrarygame.repository.AuthorRepository;
 import com.vianavitor.simplelibrarygame.repository.BookRepository;
 import com.vianavitor.simplelibrarygame.repository.GenreRepository;
@@ -56,6 +57,17 @@ public class BookService {
         this.imagePath = imagePath;
     }
 
+    private ReadingLevel getDifficultLevel(int pages) {
+        if (pages < 100) {
+            return ReadingLevel.EASY;
+        }
+        else if (pages <= 200) {
+            return ReadingLevel.MEDIUM;
+        }
+
+        return ReadingLevel.HARD;
+    }
+
     public void add(Book newBook, boolean confirmed) throws UnconfirmedOperationException {
         if (!confirmed) {
             boolean exists = repository.existsByTitle(newBook.getTitle());
@@ -72,6 +84,8 @@ public class BookService {
 
 //         TODO: implement an IA to classify the reading difficulty
 //         ...
+        newBook.setDifficultLevel(this.getDifficultLevel(newBook.getPageCount()));
+
         Book book = repository.save(newBook);
     }
 
