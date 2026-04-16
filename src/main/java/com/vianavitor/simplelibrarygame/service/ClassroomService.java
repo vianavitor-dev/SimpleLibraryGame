@@ -1,12 +1,10 @@
 package com.vianavitor.simplelibrarygame.service;
 
+import com.vianavitor.simplelibrarygame.dto.response.UserInClassroomResponse;
 import com.vianavitor.simplelibrarygame.exception.DuplicateResourceException;
 import com.vianavitor.simplelibrarygame.exception.InvalidOperationException;
 import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
-import com.vianavitor.simplelibrarygame.model.Book;
-import com.vianavitor.simplelibrarygame.model.Classroom;
-import com.vianavitor.simplelibrarygame.model.Professor;
-import com.vianavitor.simplelibrarygame.model.Student;
+import com.vianavitor.simplelibrarygame.model.*;
 import com.vianavitor.simplelibrarygame.model.utils.classes.User;
 import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import com.vianavitor.simplelibrarygame.repository.ClassroomRepository;
@@ -17,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ClassroomService {

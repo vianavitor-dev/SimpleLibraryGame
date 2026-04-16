@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import jakarta.persistence.*;
@@ -21,6 +22,7 @@ public class Student extends UserClassroom {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
+    @JsonBackReference
     private Set<Genre> favoriteGenre = new HashSet<>();
 
     @Autowired

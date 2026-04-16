@@ -3,7 +3,10 @@ package com.vianavitor.simplelibrarygame.controller;
 import com.vianavitor.simplelibrarygame.dto.ApiResponse;
 import com.vianavitor.simplelibrarygame.dto.request.ChangeNameRequest;
 import com.vianavitor.simplelibrarygame.dto.request.ModifyUsersInClassroomRequest;
+import com.vianavitor.simplelibrarygame.dto.response.UserInClassroomResponse;
+import com.vianavitor.simplelibrarygame.model.BookReadHistory;
 import com.vianavitor.simplelibrarygame.model.Classroom;
+import com.vianavitor.simplelibrarygame.model.Student;
 import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import com.vianavitor.simplelibrarygame.service.ClassroomService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/classrooms")
@@ -49,12 +53,16 @@ public class ClassroomController {
     }
 
     @PutMapping("/{id}/users")
-    public ResponseEntity<ApiResponse<Set<UserClassroom>>> modifyUsers(
+    public ResponseEntity<ApiResponse<Set<UserInClassroomResponse>>> modifyUsers(
             @PathVariable Long id,
             @Valid @RequestBody ModifyUsersInClassroomRequest request,
             HttpServletRequest req
     ) {
-        Set<UserClassroom> updated = classroomService.modifyUsersInClassroom(id, request.userIds());
+        Set<UserInClassroomResponse> updated = classroomService.modifyUsersInClassroom(id, request.userIds())
+                .stream()
+                .map(this::userClassroomToDtoResp)
+                .collect(Collectors.toSet());
+
         return ResponseEntity.ok(ApiResponse.success(updated, "Users updated", req.getRequestURI()));
     }
 
@@ -73,5 +81,26 @@ public class ClassroomController {
         classroomService.delete(id);
         ApiResponse<Void> response = ApiResponse.success(null, "Classroom deleted", request.getRequestURI());
         return ResponseEntity.ok(response);
+    }
+
+    private UserInClassroomResponse userClassroomToDtoResp(UserClassroom user) {
+        if (user instanceof Student) {
+            BookReadHistory history = ((Student) user).getStats().getCurrentBook();
+
+            return new UserInClassroomResponse(
+                    user.getId(), user.getName(), user.getUsername(), user.getLastLogin(),
+                    new UserInClassroomResponse.CurrentBookInfo(
+                            history.getId(),
+                            history.getBook().getTitle()
+                    ),
+                    false,
+                    user.isActive()
+            );
+        }
+
+        return new UserInClassroomResponse(
+                user.getId(), user.getName(), user.getUsername(), user.getLastLogin(),
+                null, false, user.isActive()
+        );
     }
 }
