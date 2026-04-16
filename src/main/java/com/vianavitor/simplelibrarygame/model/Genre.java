@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -16,9 +17,11 @@ public class Genre {
     private String name;
 
     @ManyToMany(mappedBy = "bookGenres")
+    @JsonIgnore
     private List<Book> books;
 
     @ManyToMany(mappedBy = "favoriteGenre")
+    @JsonIgnore
     private Set<Student> students = new HashSet<>();
 
     public Long getId() {

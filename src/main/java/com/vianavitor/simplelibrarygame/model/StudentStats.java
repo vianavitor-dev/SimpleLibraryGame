@@ -1,5 +1,7 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 
@@ -16,6 +18,7 @@ public class StudentStats {
     @OneToOne(cascade = CascadeType.PERSIST)
     @MapsId
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private Student student;
 
     @Column(columnDefinition = "int not null default 1")

@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import jakarta.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import java.util.Set;
 @DiscriminatorValue("student")
 public class Student extends UserClassroom {
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private StudentStats stats;
 
     @ManyToMany

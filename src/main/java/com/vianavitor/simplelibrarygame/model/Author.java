@@ -1,5 +1,7 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -15,6 +17,7 @@ public class Author {
     private String name;
 
     @ManyToMany(mappedBy = "bookAuthors")
+    @JsonIgnore
     private List<Book> books = new ArrayList<>();
 
     public Long getId() {

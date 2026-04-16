@@ -1,5 +1,7 @@
 package com.vianavitor.simplelibrarygame.model.utils.classes;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vianavitor.simplelibrarygame.model.Classroom;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -13,6 +15,7 @@ import java.util.Set;
 @Entity
 public abstract class UserClassroom extends User {
     @ManyToMany(mappedBy = "usersInClassroom")
+    @JsonBackReference
     private Set<Classroom> classrooms = new HashSet<>();
 
     @Autowired

@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model.utils.classes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vianavitor.simplelibrarygame.model.Administrator;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -25,6 +26,8 @@ public abstract class User implements UserDetails {
 
     @Column(unique = true)
     private String username;
+
+    @JsonIgnore
     private String password;
 
     @Column(columnDefinition = "date default (current_date())")
@@ -63,21 +66,25 @@ public abstract class User implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
         return isActive();
     }
@@ -87,6 +94,7 @@ public abstract class User implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this instanceof Administrator) {
             System.out.println("user role: ROLE_ADM");

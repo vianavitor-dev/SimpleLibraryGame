@@ -1,5 +1,8 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.vianavitor.simplelibrarygame.model.utils.classes.UserClassroom;
 import jakarta.persistence.*;
 
@@ -19,6 +22,7 @@ public class Classroom {
             joinColumns = @JoinColumn(name = "classroom_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
+    @JsonManagedReference
     private Set<UserClassroom> usersInClassroom = new HashSet<>();
 
     @Column(unique = true)
@@ -35,11 +39,11 @@ public class Classroom {
         this.id = id;
     }
 
-    public Set<UserClassroom> getUsers() {
+    public Set<UserClassroom> getUsersInClassroom() {
         return usersInClassroom;
     }
 
-    public void setUsers(Set<UserClassroom> usersInClassroom) {
+    public void setUsersInClassroom(Set<UserClassroom> usersInClassroom) {
         this.usersInClassroom = usersInClassroom;
     }
 
