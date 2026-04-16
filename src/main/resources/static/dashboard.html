@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📚 Gamified Reading Platform</title>
+    <title>📚 Plataforma Gamificada de Leitura</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
         body { background: #f0f2f5; margin: 0; padding: 20px; }
@@ -34,22 +34,30 @@
         .badge { display: inline-block; background: #ff9800; color: white; padding: 2px 8px; border-radius: 20px; font-size: 12px; margin-left: 10px; }
         hr { margin: 20px 0; }
         .card { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #ff9800; }
+        .step { display: none; }
+        .step.active { display: block; }
+        .genre-checkboxes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .genre-checkboxes label { margin: 0; font-weight: normal; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <h1>📚 Gamified Reading Platform <span id="roleBadge" class="badge"></span></h1>
+    <h1>📚 Plataforma Gamificada de Leitura <span id="roleBadge" class="badge"></span></h1>
 
     <!-- LOGIN SECTION -->
     <div id="loginSection" class="login-card">
         <h3>🔐 Login</h3>
         <div class="flex-row">
-            <div><label>Username</label><input type="text" id="loginUsername" placeholder="username"></div>
-            <div><label>Password</label><input type="password" id="loginPassword" placeholder="password"></div>
-            <div><button onclick="login()">Login</button></div>
+            <div><label>Usuário</label><input type="text" id="loginUsername" placeholder="usuário"></div>
+            <div><label>Senha</label><input type="password" id="loginPassword" placeholder="senha"></div>
+            <div><button onclick="login()">Entrar</button></div>
         </div>
         <div id="loginResponse" class="response"></div>
+        <hr>
+        <h3>📝 Não tem conta? Cadastre-se como aluno</h3>
+        <button onclick="showRegistration()">Cadastrar Aluno</button>
+        <div id="registrationArea" style="display:none; margin-top:20px;"></div>
     </div>
 
     <!-- DASHBOARD (hidden until login) -->
@@ -64,35 +72,32 @@
     let currentRole = null;
     let userId = null;
 
-    // Helper: decode JWT to get userId and role (adjust claims as per your TokenService)
+    // Helper: decodifica o token e extrai userId e role
     function decodeToken(token) {
         try {
             const decoded = jwt_decode(token);
             console.log(decoded);
-            // Assuming your token contains "sub" (user id) and "role" or "authorities"
-            // You may need to adjust these property names
             return {
-                userId: decoded.sub || decoded.userId || decoded.id,
-                role: (decoded.role || decoded.authorities || '').replace("ROLE_","").toLowerCase()
+                userId: decoded.id,
+                role: (decoded.role || '').replace(/^ROLE_/, '').toLowerCase()
             };
         } catch(e) {
-            console.error("Token decode failed", e);
+            console.error("Falha ao decodificar token", e);
             return null;
         }
     }
 
-    // API helper with JWT
+    // ---------- API HELPER ----------
     async function apiCall(method, url, body = null) {
         const headers = { 'Content-Type': 'application/json' };
         if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
         const options = { method, headers };
         if (body) options.body = JSON.stringify(body);
-
         const response = await fetch(url, options);
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
-            throw new Error(`Expected JSON but got: ${text.substring(0, 100)}`);
+            throw new Error(`Resposta não é JSON: ${text.substring(0, 100)}`);
         }
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
@@ -101,15 +106,15 @@
 
     function showResponse(divId, data, error = null) {
         const div = document.getElementById(divId);
-        if (error) div.innerHTML = `❌ Error: ${error}`;
-        else div.innerHTML = `✅ Success: ${JSON.stringify(data, null, 2)}`;
+        if (error) div.innerHTML = `❌ Erro: ${error}`;
+        else div.innerHTML = `✅ Sucesso: ${JSON.stringify(data, null, 2)}`;
     }
 
     // ---------- LOGIN ----------
     async function login() {
         const username = document.getElementById('loginUsername').value;
         const password = document.getElementById('loginPassword').value;
-        if (!username || !password) return alert('Fill username and password');
+        if (!username || !password) return alert('Preencha usuário e senha');
 
         try {
             const response = await fetch('/auth/login', {
@@ -118,18 +123,16 @@
                 body: JSON.stringify({ username, password })
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Login failed');
-
-            // ApiResponse format: { success, message, data, timestamp, path }
-            const token = data.data;  // the JWT string
-            if (!token) throw new Error('No token in response');
-
+            if (!response.ok) throw new Error(data.message || 'Falha no login');
+            const token = data.data;
+            if (!token) throw new Error('Token não recebido');
             authToken = token;
+
+            // Decodifica o token para obter userId e role
             const decoded = decodeToken(token);
-            if (!decoded) throw new Error('Could not decode token');
+            if (!decoded) throw new Error('Token inválido');
             userId = decoded.userId;
             currentRole = decoded.role;
-            if (!userId || !currentRole) throw new Error('Token missing userId or role');
 
             document.getElementById('roleBadge').innerText = currentRole.toUpperCase();
             document.getElementById('loginSection').style.display = 'none';
@@ -140,7 +143,89 @@
         }
     }
 
-    // ---------- DYNAMIC UI BASED ON ROLE ----------
+    // ---------- CADASTRO DE ALUNO (2 etapas) ----------
+    async function showRegistration() {
+        const area = document.getElementById('registrationArea');
+        area.style.display = 'block';
+        // Carrega gêneros para a segunda etapa (será feito ao avançar)
+        area.innerHTML = `
+            <div id="regStep1" class="step active">
+                <h4>Etapa 1 – Dados do aluno</h4>
+                <label>Usuário</label><input type="text" id="regUsername">
+                <label>Senha</label><input type="password" id="regPassword">
+                <label>Nome (opcional)</label><input type="text" id="regName">
+                <label>Código da Turma</label><input type="text" id="regClassCode">
+                <button onclick="nextStep()">Próximo</button>
+            </div>
+            <div id="regStep2" class="step">
+                <h4>Etapa 2 – Gêneros favoritos</h4>
+                <div id="genresContainer" class="genre-checkboxes"></div>
+                <button onclick="submitRegistration()">Finalizar Cadastro</button>
+                <button onclick="prevStep()">Voltar</button>
+            </div>
+        `;
+    }
+
+    let registrationData = {};
+
+    async function nextStep() {
+        registrationData = {
+            username: document.getElementById('regUsername').value,
+            password: document.getElementById('regPassword').value,
+            name: document.getElementById('regName').value,
+            classroomCode: document.getElementById('regClassCode').value
+        };
+        if (!registrationData.username || !registrationData.password || !registrationData.classroomCode) {
+            alert('Preencha todos os campos obrigatórios');
+            return;
+        }
+        // Carregar gêneros do backend
+        try {
+            const response = await fetch('/api/genres');
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message);
+            const genres = data.data || [];
+            const container = document.getElementById('genresContainer');
+            container.innerHTML = genres.map(g => `
+                <label><input type="checkbox" value="${g.id}"> ${g.name}</label>
+            `).join('');
+            document.getElementById('regStep1').classList.remove('active');
+            document.getElementById('regStep2').classList.add('active');
+        } catch (err) {
+            alert('Erro ao carregar gêneros: ' + err.message);
+        }
+    }
+
+    function prevStep() {
+        document.getElementById('regStep2').classList.remove('active');
+        document.getElementById('regStep1').classList.add('active');
+    }
+
+    async function submitRegistration() {
+        const selectedGenres = [];
+        document.querySelectorAll('#genresContainer input:checked').forEach(cb => {
+            selectedGenres.push({ id: parseInt(cb.value), name: cb.parentElement.innerText.trim() });
+        });
+        const payload = {
+            student: {
+                username: registrationData.username,
+                password: registrationData.password,
+                name: registrationData.name
+            },
+            classroomCode: registrationData.classroomCode,
+            favoriteGenres: selectedGenres
+        };
+        try {
+            const data = await apiCall('POST', '/api/students/register', payload);
+            alert('Cadastro realizado! Faça login.');
+            document.getElementById('registrationArea').style.display = 'none';
+            // limpa campos
+        } catch (err) {
+            alert('Erro no cadastro: ' + err.message);
+        }
+    }
+
+    // ---------- DASHBOARD DINÂMICO ----------
     function loadDashboard() {
         const tabsContainer = document.getElementById('tabsContainer');
         const tabContents = document.getElementById('tabContents');
@@ -150,27 +235,27 @@
         let tabs = [];
         if (currentRole === 'student') {
             tabs = [
-                { id: 'profile', label: '👤 Profile & Stats' },
-                { id: 'books', label: '📖 Books & Reading' },
-                { id: 'groups', label: '👥 Reading Groups' },
-                { id: 'summaries', label: '📝 My Summaries' },
-                { id: 'history', label: '📚 Reading History' }
+                { id: 'profile', label: '👤 Perfil & Estatísticas' },
+                { id: 'books', label: '📖 Livros & Leitura' },
+                { id: 'groups', label: '👥 Grupos de Leitura' },
+                { id: 'summaries', label: '📝 Meus Resumos' },
+                { id: 'history', label: '📚 Histórico' }
             ];
         } else if (currentRole === 'professor') {
             tabs = [
-                { id: 'students', label: '👩‍🎓 Students Overview' },
-                { id: 'summaries', label: '📄 Student Summaries' },
-                { id: 'stats', label: '📊 Class Stats' }
+                { id: 'students', label: '👩‍🎓 Alunos' },
+                { id: 'summaries', label: '📄 Resumos dos Alunos' },
+                { id: 'stats', label: '📊 Estatísticas' }
             ];
         } else if (currentRole === 'librarian') {
             tabs = [
-                { id: 'books', label: '📚 Manage Books' },
-                { id: 'authors', label: '✍️ Authors' }
+                { id: 'books', label: '📚 Gerenciar Livros' },
+                { id: 'authors', label: '✍️ Autores' }
             ];
         } else if (currentRole === 'adm') {
             tabs = [
-                { id: 'users', label: '👥 Manage Users' },
-                { id: 'classrooms', label: '🏫 Manage Classes' }
+                { id: 'users', label: '👥 Gerenciar Usuários' },
+                { id: 'classrooms', label: '🏫 Gerenciar Turmas' }
             ];
         }
 
@@ -180,13 +265,11 @@
             btn.innerText = tab.label;
             btn.onclick = () => switchTab(tab.id);
             tabsContainer.appendChild(btn);
-
             const contentDiv = document.createElement('div');
             contentDiv.id = `tab-${tab.id}`;
             contentDiv.className = 'tab-content';
             tabContents.appendChild(contentDiv);
         });
-
         if (tabs.length) switchTab(tabs[0].id);
     }
 
@@ -196,7 +279,6 @@
         const activeContent = document.getElementById(`tab-${tabId}`);
         if (activeContent) activeContent.classList.add('active');
         if (event && event.target) event.target.classList.add('active');
-
         if (activeContent && activeContent.innerHTML.trim() === '') {
             if (currentRole === 'student') renderStudentTab(tabId, activeContent);
             else if (currentRole === 'professor') renderProfessorTab(tabId, activeContent);
@@ -205,73 +287,75 @@
         }
     }
 
-    // ------------------------- STUDENT -------------------------
+    // ------------------------- ALUNO -------------------------
     function renderStudentTab(tabId, container) {
         if (tabId === 'profile') {
             container.innerHTML = `
-                <div class="card"><h3>📊 My Stats</h3>
-                <button onclick="fetchStudentStats()">Refresh Stats</button>
+                <div class="card"><h3>📊 Minhas Estatísticas</h3>
+                <button onclick="fetchStudentStats()">Atualizar</button>
                 <div id="statsResponse" class="response"></div>
                 <hr>
-                <h3>🔥 Reading Streak</h3>
-                <button onclick="updateStreak()">Update Streak</button>
+                <h3>🔥 Sequência de Leitura</h3>
+                <button onclick="updateStreak()">Atualizar Sequência</button>
                 <div id="streakResponse" class="response"></div>
                 </div>`;
         } else if (tabId === 'books') {
             container.innerHTML = `
-                <div class="card"><h3>🔍 Search Books</h3>
-                <input type="text" id="searchTitle" placeholder="Book title"><button onclick="searchBooks()">Search</button>
+                <div class="card"><h3>🔍 Buscar Livros</h3>
+                <input type="text" id="searchTitle" placeholder="Título"><input type="text" id="searchAuthor" placeholder="Autor"><input type="text" id="searchGenre" placeholder="Gênero">
+                <button onclick="searchBooks()">Buscar</button>
                 <div id="searchResponse" class="response"></div>
                 </div>
-                <div class="card"><h3>📖 Start / Update Reading</h3>
-                <label>Book ID</label><input type="number" id="readingBookId">
-                <label>Last Page Read</label><input type="number" id="readingPage" value="0">
-                <button onclick="setCurrentBook()">Save Progress</button>
+                <div class="card"><h3>📖 Sessão de Leitura</h3>
+                <label>Livro ID</label><input type="number" id="readingBookId">
+                <label>Página inicial</label><input type="number" id="startPage" value="1">
+                <button onclick="startReading()">Iniciar Leitura</button>
                 <div id="readingResponse" class="response"></div>
+                <hr>
+                <label>Atualizar página lida</label><input type="number" id="updatePage">
+                <button onclick="updateReadingPage()">Atualizar Página</button>
+                <hr>
+                <label>Finalizar sessão</label>
+                <label>Tempo lido (minutos)</label><input type="number" id="readingMinutes">
+                <label>Páginas lidas nesta sessão</label><input type="number" id="pagesRead">
+                <label>Resumo</label><textarea id="summaryText" rows="3"></textarea>
+                <button onclick="finishReading()">Finalizar e Enviar Resumo</button>
                 </div>
-                <div class="card"><h3>⭐ Rate a Book</h3>
-                <label>Book ID</label><input type="number" id="rateBookId">
-                <label>Rating (1-5)</label><input type="number" id="rateValue" min="1" max="5">
-                <button onclick="rateBook()">Rate</button>
+                <div class="card"><h3>⭐ Avaliar Livro</h3>
+                <label>Livro ID</label><input type="number" id="rateBookId">
+                <label>Nota (1-5)</label><input type="number" id="rateValue" min="1" max="5">
+                <button onclick="rateBook()">Avaliar</button>
                 <div id="rateResponse" class="response"></div>
                 </div>`;
         } else if (tabId === 'groups') {
             container.innerHTML = `
-                <div class="card"><h3>➕ Create Group</h3>
-                <label>Group Name</label><input type="text" id="groupName">
-                <button onclick="createGroup()">Create</button>
+                <div class="card"><h3>➕ Criar Grupo</h3>
+                <label>Nome do Grupo</label><input type="text" id="groupName">
+                <button onclick="createGroup()">Criar</button>
                 <div id="createGroupResponse" class="response"></div>
                 </div>
-                <div class="card"><h3>📋 My Groups</h3>
-                <button onclick="fetchMyGroups()">Load</button>
+                <div class="card"><h3>📋 Meus Grupos</h3>
+                <button onclick="fetchMyGroups()">Carregar</button>
                 <div id="groupsList" class="response"></div>
                 </div>
-                <div class="card"><h3>📚 Add Book to Group</h3>
-                <label>Group ID</label><input type="number" id="addToGroupId">
-                <label>Book ID</label><input type="number" id="addBookToGroupId">
-                <button onclick="addBookToGroup()">Add</button>
+                <div class="card"><h3>📚 Adicionar Livro ao Grupo</h3>
+                <label>Grupo ID</label><input type="number" id="addToGroupId">
+                <label>Livro ID</label><input type="number" id="addBookToGroupId">
+                <button onclick="addBookToGroup()">Adicionar</button>
                 <div id="addBookGroupResponse" class="response"></div>
                 </div>`;
         } else if (tabId === 'summaries') {
-            container.innerHTML = `
-                <div class="card"><h3>✍️ Submit Book Summary</h3>
-                <label>Book ID</label><input type="number" id="summaryBookId">
-                <label>Your summary</label><textarea id="summaryText" rows="3"></textarea>
-                <button onclick="submitSummary()">Submit</button>
-                <div id="summaryResponse" class="response"></div>
-                </div>
-                <div class="card"><h3>📄 My Summaries</h3>
-                <button onclick="fetchMySummaries()">Load</button>
-                <div id="mySummaries" class="response"></div>
-                </div>`;
+            container.innerHTML = `<div class="card"><h3>📄 Meus Resumos</h3>
+                <button onclick="fetchMySummaries()">Carregar</button>
+                <div id="mySummaries" class="response"></div></div>`;
         } else if (tabId === 'history') {
-            container.innerHTML = `<div class="card"><h3>📚 My Reading History</h3>
-                <button onclick="fetchReadingHistory()">Load</button>
+            container.innerHTML = `<div class="card"><h3>📚 Histórico de Leitura</h3>
+                <button onclick="fetchReadingHistory()">Carregar</button>
                 <div id="historyResponse" class="response"></div></div>`;
         }
     }
 
-    // Student API calls (matching exact controller endpoints)
+    // Funções do aluno
     async function fetchStudentStats() {
         try { const data = await apiCall('GET', `/api/stats/${userId}`); showResponse('statsResponse', data); }
         catch(e) { showResponse('statsResponse', null, e.message); }
@@ -282,18 +366,53 @@
     }
     async function searchBooks() {
         const title = document.getElementById('searchTitle').value;
-        if(!title) return;
-        // BookController has @GetMapping("/") with optional title? Actually it's getAllBooks without filter.
-        // We'll use a custom endpoint? Not defined. We'll just fetch all.
-        try { const data = await apiCall('GET', `/api/books/`); showResponse('searchResponse', data); }
-        catch(e) { showResponse('searchResponse', null, e.message); }
+        const author = document.getElementById('searchAuthor').value;
+        const genre = document.getElementById('searchGenre').value;
+        let url = '/api/books/';
+        let allBooks = [];
+        try {
+            const data = await apiCall('GET', url);
+            allBooks = data.data || [];
+            let filtered = allBooks;
+            if (title) filtered = filtered.filter(b => b.title.toLowerCase().includes(title.toLowerCase()));
+            if (author) filtered = filtered.filter(b => b.bookAuthors.some(a => a.name.toLowerCase().includes(author.toLowerCase())));
+            if (genre) filtered = filtered.filter(b => b.bookGenres.some(g => g.name.toLowerCase().includes(genre.toLowerCase())));
+            showResponse('searchResponse', filtered);
+        } catch(e) { showResponse('searchResponse', null, e.message); }
     }
-    async function setCurrentBook() {
+    async function startReading() {
         const bookId = document.getElementById('readingBookId').value;
-        const page = document.getElementById('readingPage').value;
+        const page = document.getElementById('startPage').value;
         const body = { userId, bookId: parseInt(bookId), page: parseInt(page) };
         try { const data = await apiCall('POST', '/api/stats/set-current-book', body); showResponse('readingResponse', data); }
         catch(e) { showResponse('readingResponse', null, e.message); }
+    }
+    async function updateReadingPage() {
+        const bookId = document.getElementById('readingBookId').value;
+        const page = document.getElementById('updatePage').value;
+        if (!bookId || !page) return;
+        const body = { userId, bookId: parseInt(bookId), page: parseInt(page) };
+        try { const data = await apiCall('POST', '/api/stats/set-current-book', body); showResponse('readingResponse', data); }
+        catch(e) { showResponse('readingResponse', null, e.message); }
+    }
+    async function finishReading() {
+        const bookId = document.getElementById('readingBookId').value;
+        const minutes = parseInt(document.getElementById('readingMinutes').value);
+        const pages = parseInt(document.getElementById('pagesRead').value);
+        const summaryText = document.getElementById('summaryText').value;
+        if (!bookId || !minutes || !pages || !summaryText) {
+            alert('Preencha todos os campos');
+            return;
+        }
+        // Envia resumo
+        try {
+            await apiCall('POST', '/api/summaries', { text: summaryText, bookId: parseInt(bookId), studentId: userId });
+            // Calcula EXP (exemplo: 5 por página + 10 por minuto)
+            const exp = (pages * 5) + (minutes * 10);
+            await apiCall('POST', `/api/stats/${userId}/add-exp`, { exp });
+            alert('Sessão finalizada! EXP adicionado.');
+            document.getElementById('readingResponse').innerHTML = '✅ Sessão finalizada com sucesso!';
+        } catch(e) { showResponse('readingResponse', null, e.message); }
     }
     async function rateBook() {
         const bookId = document.getElementById('rateBookId').value;
@@ -303,8 +422,7 @@
     }
     async function createGroup() {
         const name = document.getElementById('groupName').value;
-        const body = { name, studentId: userId };
-        try { const data = await apiCall('POST', '/api/groups', body); showResponse('createGroupResponse', data); }
+        try { const data = await apiCall('POST', '/api/groups', { name, studentId: userId }); showResponse('createGroupResponse', data); }
         catch(e) { showResponse('createGroupResponse', null, e.message); }
     }
     async function fetchMyGroups() {
@@ -316,13 +434,6 @@
         const bookId = document.getElementById('addBookToGroupId').value;
         try { const data = await apiCall('POST', `/api/group-books/add?groupId=${groupId}&bookId=${bookId}`); showResponse('addBookGroupResponse', data); }
         catch(e) { showResponse('addBookGroupResponse', null, e.message); }
-    }
-    async function submitSummary() {
-        const bookId = document.getElementById('summaryBookId').value;
-        const text = document.getElementById('summaryText').value;
-        const body = { text, bookId: parseInt(bookId), studentId: userId };
-        try { const data = await apiCall('POST', '/api/summaries', body); showResponse('summaryResponse', data); }
-        catch(e) { showResponse('summaryResponse', null, e.message); }
     }
     async function fetchMySummaries() {
         try { const data = await apiCall('GET', `/api/summaries/student/${userId}`); showResponse('mySummaries', data); }
@@ -336,18 +447,18 @@
     // ------------------------- PROFESSOR -------------------------
     function renderProfessorTab(tabId, container) {
         if (tabId === 'students') {
-            container.innerHTML = `<div class="card"><h3>👩‍🎓 All Students</h3>
-                <button onclick="fetchAllStudents()">Load</button>
+            container.innerHTML = `<div class="card"><h3>👩‍🎓 Alunos</h3>
+                <button onclick="fetchAllStudents()">Carregar</button>
                 <div id="studentsList" class="response"></div></div>`;
         } else if (tabId === 'summaries') {
-            container.innerHTML = `<div class="card"><h3>📄 Student Summaries (by Book)</h3>
-                <label>Book ID</label><input type="number" id="profBookId">
-                <button onclick="fetchSummariesByBook()">Load</button>
+            container.innerHTML = `<div class="card"><h3>📄 Resumos por Livro</h3>
+                <label>Livro ID</label><input type="number" id="profBookId">
+                <button onclick="fetchSummariesByBook()">Carregar</button>
                 <div id="profSummaries" class="response"></div></div>`;
         } else if (tabId === 'stats') {
-            container.innerHTML = `<div class="card"><h3>📊 Student Stats (by Student ID)</h3>
-                <label>Student ID</label><input type="number" id="targetStudentId">
-                <button onclick="fetchStudentStatsById()">Load</button>
+            container.innerHTML = `<div class="card"><h3>📊 Estatísticas do Aluno</h3>
+                <label>ID do Aluno</label><input type="number" id="targetStudentId">
+                <button onclick="fetchStudentStatsById()">Carregar</button>
                 <div id="profStatsResponse" class="response"></div></div>`;
         }
     }
@@ -366,37 +477,37 @@
         catch(e) { showResponse('profStatsResponse', null, e.message); }
     }
 
-    // ------------------------- LIBRARIAN -------------------------
+    // ------------------------- BIBLIOTECÁRIO -------------------------
     function renderLibrarianTab(tabId, container) {
         if (tabId === 'books') {
             container.innerHTML = `
-                <div class="card"><h3>➕ Add Book (with authors & genres)</h3>
-                <label>Title</label><input type="text" id="librarianTitle">
-                <label>Synopsis</label><textarea id="librarianSynopsis"></textarea>
-                <label>Pages</label><input type="number" id="librarianPages">
-                <label>Release Date</label><input type="date" id="librarianRelease">
-                <label>Authors (comma names)</label><input id="librarianAuthors" placeholder="J.K. Rowling, George Orwell">
-                <label>Genres (comma names)</label><input id="librarianGenres" placeholder="Fantasy, Fiction">
-                <label>Confirmed (skip duplicate title check)</label><input type="checkbox" id="librarianConfirmed">
-                <button onclick="addBookByLibrarian()">Add Book</button>
+                <div class="card"><h3>➕ Adicionar Livro</h3>
+                <label>Título</label><input type="text" id="librarianTitle">
+                <label>Sinopse</label><textarea id="librarianSynopsis"></textarea>
+                <label>Páginas</label><input type="number" id="librarianPages">
+                <label>Data de Lançamento</label><input type="date" id="librarianRelease">
+                <label>Autores (nomes separados por vírgula)</label><input id="librarianAuthors">
+                <label>Gêneros (nomes separados por vírgula)</label><input id="librarianGenres">
+                <label>Confirmar (ignorar duplicidade de título)</label><input type="checkbox" id="librarianConfirmed">
+                <button onclick="addBookByLibrarian()">Adicionar Livro</button>
                 <div id="librarianAddResponse" class="response"></div>
                 </div>
-                <div class="card"><h3>✏️ Update Book Availability</h3>
-                <label>Book ID</label><input type="number" id="updateBookId">
-                <label>Available?</label><select id="availableStatus"><option value="true">Yes</option><option value="false">No</option></select>
-                <button onclick="updateBookAvailability()">Update</button>
+                <div class="card"><h3>✏️ Atualizar Disponibilidade</h3>
+                <label>Livro ID</label><input type="number" id="updateBookId">
+                <label>Disponível?</label><select id="availableStatus"><option value="true">Sim</option><option value="false">Não</option></select>
+                <button onclick="updateBookAvailability()">Atualizar</button>
                 <div id="availabilityResponse" class="response"></div>
                 </div>
-                <div class="card"><h3>📖 List All Books</h3>
-                <button onclick="listAllBooks()">Load</button>
+                <div class="card"><h3>📖 Listar Livros</h3>
+                <button onclick="listAllBooks()">Carregar</button>
                 <div id="allBooksResponse" class="response"></div>
                 </div>`;
         } else if (tabId === 'authors') {
-            container.innerHTML = `<div class="card"><h3>✍️ Add Author</h3>
-                <label>Author Name</label><input type="text" id="authorName">
-                <button onclick="addAuthor()">Add</button>
+            container.innerHTML = `<div class="card"><h3>✍️ Adicionar Autor</h3>
+                <label>Nome do Autor</label><input type="text" id="authorName">
+                <button onclick="addAuthor()">Adicionar</button>
                 <div id="authorResponse" class="response"></div>
-                <hr><button onclick="listAuthors()">List All Authors</button>
+                <hr><button onclick="listAuthors()">Listar Autores</button>
                 <div id="authorsList" class="response"></div></div>`;
         }
     }
@@ -411,9 +522,8 @@
         const authors = authorsStr.split(',').filter(s=>s.trim()).map(s => ({ name: s.trim() }));
         const genres = genresStr.split(',').filter(s=>s.trim()).map(s => ({ name: s.trim() }));
         const bookInfo = { title, synopsis, authors, genres, pages, releasedAt };
-        const body = { book: bookInfo, confirmed };
         try {
-            const data = await apiCall('POST', '/api/books', body);
+            const data = await apiCall('POST', '/api/books', { book: bookInfo, confirmed });
             showResponse('librarianAddResponse', data);
         } catch(e) { showResponse('librarianAddResponse', null, e.message); }
     }
@@ -437,33 +547,33 @@
         catch(e) { showResponse('authorsList', null, e.message); }
     }
 
-    // ------------------------- ADMINISTRATOR -------------------------
+    // ------------------------- ADMINISTRADOR -------------------------
     function renderAdminTab(tabId, container) {
         if (tabId === 'users') {
-            container.innerHTML = `<div class="card"><h3>👥 Register New User (Professor/Librarian)</h3>
-                <label>Role</label><select id="adminRole"><option value="professor">Professor</option><option value="librarian">Librarian</option></select>
-                <label>Username</label><input id="adminUsername">
-                <label>Password</label><input type="password" id="adminPassword">
-                <label>Name (optional)</label><input id="adminName">
-                <label>Classroom Code (for professor)</label><input id="adminClassroomCode">
-                <button onclick="registerUserByAdmin()">Register</button>
+            container.innerHTML = `<div class="card"><h3>👥 Cadastrar Professor ou Bibliotecário</h3>
+                <label>Papel</label><select id="adminRole"><option value="professor">Professor</option><option value="librarian">Bibliotecário</option></select>
+                <label>Usuário</label><input id="adminUsername">
+                <label>Senha</label><input type="password" id="adminPassword">
+                <label>Nome</label><input id="adminName">
+                <label>Código da Turma (apenas para professor)</label><input id="adminClassroomCode">
+                <button onclick="registerUserByAdmin()">Cadastrar</button>
                 <div id="adminRegisterResponse" class="response"></div>
                 </div>
-                <div class="card"><h3>👥 Register Administrator</h3>
-                <label>Username</label><input id="adminUsername2">
-                <label>Password</label><input type="password" id="adminPassword2">
-                <label>Name</label><input id="adminName2">
-                <button onclick="registerAdministrator()">Register Admin</button>
+                <div class="card"><h3>👥 Cadastrar Administrador</h3>
+                <label>Usuário</label><input id="adminUsername2">
+                <label>Senha</label><input type="password" id="adminPassword2">
+                <label>Nome</label><input id="adminName2">
+                <button onclick="registerAdministrator()">Cadastrar Admin</button>
                 <div id="adminRegisterResponse2" class="response"></div>
                 </div>`;
         } else if (tabId === 'classrooms') {
-            container.innerHTML = `<div class="card"><h3>🏫 Create Classroom</h3>
-                <label>Classroom Name</label><input id="className">
-                <button onclick="createClassroom()">Create</button>
+            container.innerHTML = `<div class="card"><h3>🏫 Criar Turma</h3>
+                <label>Nome da Turma</label><input id="className">
+                <button onclick="createClassroom()">Criar</button>
                 <div id="classroomResponse" class="response"></div>
                 </div>
-                <div class="card"><h3>📋 List All Classrooms</h3>
-                <button onclick="listAllClassrooms()">Load</button>
+                <div class="card"><h3>📋 Listar Turmas</h3>
+                <button onclick="listAllClassrooms()">Carregar</button>
                 <div id="allClassroomsResponse" class="response"></div>
                 </div>`;
         }
@@ -481,7 +591,7 @@
             body = { professor: userData, classroomCode };
         } else {
             url = '/api/librarians/register';
-            body = userData;  // Librarian expects raw Librarian object (with username, password, name)
+            body = userData;
         }
         try { const data = await apiCall('POST', url, body); showResponse('adminRegisterResponse', data); }
         catch(e) { showResponse('adminRegisterResponse', null, e.message); }
@@ -490,8 +600,7 @@
         const username = document.getElementById('adminUsername2').value;
         const password = document.getElementById('adminPassword2').value;
         const name = document.getElementById('adminName2').value;
-        const body = { username, password, name };
-        try { const data = await apiCall('POST', '/api/administrators/register', body); showResponse('adminRegisterResponse2', data); }
+        try { const data = await apiCall('POST', '/api/administrators/register', { username, password, name }); showResponse('adminRegisterResponse2', data); }
         catch(e) { showResponse('adminRegisterResponse2', null, e.message); }
     }
     async function createClassroom() {
@@ -504,17 +613,22 @@
         catch(e) { showResponse('allClassroomsResponse', null, e.message); }
     }
 
-    // expose all functions to global scope
+    // Expor funções globalmente
     window.login = login;
+    window.showRegistration = showRegistration;
+    window.nextStep = nextStep;
+    window.prevStep = prevStep;
+    window.submitRegistration = submitRegistration;
     window.fetchStudentStats = fetchStudentStats;
     window.updateStreak = updateStreak;
     window.searchBooks = searchBooks;
-    window.setCurrentBook = setCurrentBook;
+    window.startReading = startReading;
+    window.updateReadingPage = updateReadingPage;
+    window.finishReading = finishReading;
     window.rateBook = rateBook;
     window.createGroup = createGroup;
     window.fetchMyGroups = fetchMyGroups;
     window.addBookToGroup = addBookToGroup;
-    window.submitSummary = submitSummary;
     window.fetchMySummaries = fetchMySummaries;
     window.fetchReadingHistory = fetchReadingHistory;
     window.fetchAllStudents = fetchAllStudents;

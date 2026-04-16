@@ -73,6 +73,8 @@ public class SecurityConfig {
 
 //                        * Groups/Group-Books permissions
                                 .requestMatchers("/api/groups/**", "/api/group-books/**").hasRole("STUDENT")
+//                        * Genre permissions
+                                .requestMatchers(HttpMethod.GET, "/api/genres").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
