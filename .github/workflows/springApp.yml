@@ -31,7 +31,7 @@ jobs:
         cache: 'maven'
 
     - name: Run Tests
-      run: mvn test -Dtest='!BookServiceTest#testChangeImage'
+      run: mvn test -Dspring.profiles.active=test -Dtest='!BookServiceTest#testChangeImage'
       env:
         SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/testdb
         SPRING_DATASOURCE_USERNAME: root
