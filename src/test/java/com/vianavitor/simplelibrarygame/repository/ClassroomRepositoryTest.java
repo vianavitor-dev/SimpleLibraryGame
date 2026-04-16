@@ -104,14 +104,14 @@ class ClassroomRepositoryTest extends BaseRepositoryTest {
         studentRepository.save(student);
 
         student.getClassrooms().add(testClassroom);
-        testClassroom.getUsers().add(student);
+        testClassroom.getUsersInClassroom().add(student);
 
         classroomRepository.save(testClassroom);
         studentRepository.save(student);
 
         Classroom found = classroomRepository.findById(testClassroom.getId()).get();
-        assertThat(found.getUsers()).hasSize(1);
-        assertThat(found.getUsers().iterator().next().getUsername()).isEqualTo("student_in_class");
+        assertThat(found.getUsersInClassroom()).hasSize(1);
+        assertThat(found.getUsersInClassroom().iterator().next().getUsername()).isEqualTo("student_in_class");
     }
 
     @Test
@@ -120,13 +120,13 @@ class ClassroomRepositoryTest extends BaseRepositoryTest {
         professorRepository.save(professor);
 
         professor.getClassrooms().add(testClassroom);
-        testClassroom.getUsers().add(professor);
+        testClassroom.getUsersInClassroom().add(professor);
 
         classroomRepository.save(testClassroom);
         professorRepository.save(professor);
 
         Classroom found = classroomRepository.findById(testClassroom.getId()).get();
-        assertThat(found.getUsers()).hasSize(1);
-        assertThat(found.getUsers().iterator().next().getUsername()).isEqualTo("prof_in_class");
+        assertThat(found.getUsersInClassroom()).hasSize(1);
+        assertThat(found.getUsersInClassroom().iterator().next().getUsername()).isEqualTo("prof_in_class");
     }
 }

@@ -47,7 +47,7 @@ public class ProfessorService implements ManageableUser<Professor> {
                         .orElseThrow(() -> new ResourceNotFoundException("not found classroom"));
 
         Professor professor = this.register(newProfessor);
-        classroom.getUsers().add(professor);
+        classroom.getUsersInClassroom().add(professor);
 
         classroomRepository.save(classroom);
         newProfessor.getClassrooms().add(classroom);

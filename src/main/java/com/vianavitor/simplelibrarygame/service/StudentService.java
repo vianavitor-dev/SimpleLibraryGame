@@ -80,7 +80,7 @@ public class StudentService implements ManageableUser<Student> {
         stats.setMaxLvlExperience(150);
         stats = statsRepository.save(stats);
 
-        classroom.getUsers().add(student);
+        classroom.getUsersInClassroom().add(student);
         classroomRepository.save(classroom);
 
         student.setStats(stats);

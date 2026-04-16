@@ -109,8 +109,8 @@ public class ClassroomService {
             current = iterator.next();
         }
         
-        classroom.setUsers(classroomUsers);
-        return repository.save(classroom).getUsers();
+        classroom.setUsersInClassroom(classroomUsers);
+        return repository.save(classroom).getUsersInClassroom();
     }
 
     public Classroom changeName(Long id, String name) throws ResourceNotFoundException, DuplicateResourceException {
