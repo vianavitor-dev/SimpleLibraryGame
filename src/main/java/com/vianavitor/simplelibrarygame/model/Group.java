@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class Group {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private Student student;
 
     public Long getId() {

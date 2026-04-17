@@ -1,5 +1,6 @@
 package com.vianavitor.simplelibrarygame.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.vianavitor.simplelibrarygame.model.utils.fields.ReadingLevel;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -48,6 +49,7 @@ public class Book {
     private double ratingValue;
 
     @Column(columnDefinition = "int not null default 0")
+    @JsonIgnore
     private int ratingCount;
 
     @Column(columnDefinition = "int not null default 1")
