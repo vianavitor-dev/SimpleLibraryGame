@@ -1,9 +1,11 @@
 package com.vianavitor.simplelibrarygame.controller;
 
 import com.vianavitor.simplelibrarygame.dto.ApiResponse;
+import com.vianavitor.simplelibrarygame.dto.request.aux.UserInfoData;
 import com.vianavitor.simplelibrarygame.model.Librarian;
 import com.vianavitor.simplelibrarygame.service.LibrarianService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +22,10 @@ public class LibrarianController {
     private LibrarianService librarianService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<Librarian>> register(@RequestBody Librarian librarian, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Librarian>> register(@RequestBody @Valid UserInfoData data, HttpServletRequest request) {
+        Librarian librarian = new Librarian(data.username(), data.password());
+        librarian.setName(data.name());
+
         Librarian saved = librarianService.register(librarian);
         ApiResponse<Librarian> response = ApiResponse.success(saved, "Librarian registered", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
