@@ -11,7 +11,7 @@ public record UserInClassroomResponse(
         String username,
         LocalDate lastLogin,
         @Nullable CurrentBookInfo currentBook,
-        @JsonProperty("is_professor") boolean isProfessor,
+        Boolean isProfessor,
         boolean active
 ) {
     public record CurrentBookInfo (

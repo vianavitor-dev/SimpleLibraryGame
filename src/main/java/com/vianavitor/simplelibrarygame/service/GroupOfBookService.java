@@ -55,6 +55,7 @@ public class GroupOfBookService {
                     throw new DuplicateResourceException("book already saved into the group");
                 });
 
+        groupOfBook.setId(id);
         groupOfBook.setBook(book);
         groupOfBook.setGroup(group);
         groupOfBook.setCreatedAt(LocalDate.now());

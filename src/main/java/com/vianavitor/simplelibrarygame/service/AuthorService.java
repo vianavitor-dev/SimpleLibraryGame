@@ -33,8 +33,8 @@ public class AuthorService {
                     throw new DuplicateResourceException("author already registered");
                 });
 
+        author = new Author();
         author.setName(name);
-
         repository.save(author);
     }
 

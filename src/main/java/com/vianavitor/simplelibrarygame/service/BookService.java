@@ -81,6 +81,8 @@ public class BookService {
 
         newBook.setBookGenres(bookGenres);
         newBook.setBookAuthors(bookAuthors);
+        newBook.setAvailable(true);
+        newBook.setQuantity(1);
 
 //         TODO: implement an IA to classify the reading difficulty
 //         ...

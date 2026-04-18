@@ -100,7 +100,7 @@ public class ClassroomController {
 
         return new UserInClassroomResponse(
                 user.getId(), user.getName(), user.getUsername(), user.getLastLogin(),
-                null, false, user.isActive()
+                null, true, user.isActive()
         );
     }
 }

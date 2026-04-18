@@ -26,6 +26,9 @@ public class AuthorServiceTest extends BaseServiceTest {
     @Mock
     private AuthorRepository repository;
 
+    @InjectMocks
+    private AuthorService service;
+
     private Author testAuthor;
 
     @BeforeEach
@@ -42,7 +45,6 @@ public class AuthorServiceTest extends BaseServiceTest {
         when(repository.save(any(Author.class)))
                 .thenReturn(null);
 
-        AuthorService service = new AuthorService(repository, testAuthor);
         service.add("J.K. Rowling");
 
         assertThat(testAuthor.getName()).isEqualTo("J.K. Rowling");
@@ -54,8 +56,6 @@ public class AuthorServiceTest extends BaseServiceTest {
     public void testAddDuplicateAuthorExpectingException() {
         when(repository.findByName("J.K. Rowling"))
                 .thenReturn(Optional.of(testAuthor));
-
-        AuthorService service = new AuthorService(repository, testAuthor);
 
         assertThrows(Exception.class, () -> {
             service.add("J.K. Rowling");
@@ -79,7 +79,6 @@ public class AuthorServiceTest extends BaseServiceTest {
         when(repository.findById(1L))
                 .thenReturn(Optional.of(testAuthor));
 
-        AuthorService service = new AuthorService(repository, testAuthor);
         List<Book> results = service.getAuthorBooks(1L);
 
         assertThat(results).isNotEmpty();
@@ -103,8 +102,6 @@ public class AuthorServiceTest extends BaseServiceTest {
 
         when(repository.findById(1L))
                 .thenReturn(Optional.empty());
-
-        AuthorService service = new AuthorService(repository, testAuthor);
 
         assertThrows(Exception.class, () -> {
             service.getAuthorBooks(1L);
