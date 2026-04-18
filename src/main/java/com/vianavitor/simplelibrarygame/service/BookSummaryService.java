@@ -10,6 +10,7 @@ import com.vianavitor.simplelibrarygame.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -34,6 +35,7 @@ public class BookSummaryService {
         BookSummary summary = new BookSummary();
         summary.setBook(book);
         summary.setStudent(student);
+        summary.setWrittenAt(LocalDate.now());
 
         repository.save(summary);
     }
