@@ -35,6 +35,7 @@ public class BookSummaryService {
         BookSummary summary = new BookSummary();
         summary.setBook(book);
         summary.setStudent(student);
+        summary.setText(text);
         summary.setWrittenAt(LocalDate.now());
 
         repository.save(summary);
