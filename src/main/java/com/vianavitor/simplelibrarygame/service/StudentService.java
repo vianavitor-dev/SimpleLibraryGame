@@ -35,25 +35,6 @@ public class StudentService implements ManageableUser<Student> {
     @Autowired
     private PasswordEncoder encoder;
 
-    private StudentStats stats;
-
-    @Autowired
-    public StudentService() {
-        this.stats = new StudentStats();
-    }
-
-    public StudentService(
-            StudentRepository repository, StudentStatsRepository statsRepository,
-            ClassroomRepository classroomRepository, PasswordEncoder encoder,
-            StudentStats stats
-    ) {
-        this.repository = repository;
-        this.statsRepository = statsRepository;
-        this.classroomRepository = classroomRepository;
-        this.encoder = encoder;
-        this.stats = stats;
-    }
-
     @Override
     public Student register(Student entity) throws DuplicateResourceException {
         boolean studentExists = repository.existsByUsername(entity.getUsername());
@@ -75,6 +56,7 @@ public class StudentService implements ManageableUser<Student> {
         newStudent.setFavoriteGenre(favoriteGenres);
         Student student = this.register(newStudent);
 
+        StudentStats stats = new StudentStats();
         stats.setUser(student);
         stats.setLevel(1);
         stats.setMaxLvlExperience(150);

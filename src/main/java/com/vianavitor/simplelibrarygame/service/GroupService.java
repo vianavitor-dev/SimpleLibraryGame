@@ -18,17 +18,11 @@ public class GroupService {
     @Autowired
     private StudentRepository studentRepository;
 
-    private Group group;
-
-    @Autowired
-    public GroupService() {
-        this.group = new Group();
-    }
-
     public Group create(String name, Long studentId) throws ResourceNotFoundException {
         Student owner = studentRepository.findById(studentId)
                 .orElseThrow(() -> new ResourceNotFoundException("not found student"));
 
+        Group group = new Group();
         group.setName(name);
         group.setStudent(owner);
 

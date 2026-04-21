@@ -15,27 +15,15 @@ public class AuthorService {
     @Autowired
     private AuthorRepository repository;
 
-    private Author author;
-
-    @Autowired
-    public AuthorService() {
-        this.author = new Author();
-    }
-
-    public AuthorService(AuthorRepository repository, Author author) {
-        this.repository = repository;
-        this.author = author;
-    }
-
-    public void add(String name) throws DuplicateResourceException {
+    public Author add(String name) throws DuplicateResourceException {
         repository.findByName(name)
                 .ifPresent((a) -> {
                     throw new DuplicateResourceException("author already registered");
                 });
 
-        author = new Author();
+        Author author = new Author();
         author.setName(name);
-        repository.save(author);
+        return repository.save(author);
     }
 
     public Author getByName(String name) throws ResourceNotFoundException {

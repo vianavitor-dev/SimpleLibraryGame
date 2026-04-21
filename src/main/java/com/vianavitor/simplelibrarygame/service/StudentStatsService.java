@@ -33,50 +33,16 @@ public class StudentStatsService {
     @Autowired
     private BookRepository bookRepository;
 
-    private StudentStats stats;
-
-    private BookReadHistory history;
-
-    @Autowired
-    public StudentStatsService() {
-        this.stats = new StudentStats();
-        this.history = new BookReadHistory();
-    }
-
-    public StudentStatsService(
-            StudentStatsRepository repository, StudentRepository studentRepository,
-            BookReadHistoryRepository historyRepository, BookRepository bookRepository,
-            StudentStats stats
-    ) {
-        this.repository = repository;
-        this.studentRepository = studentRepository;
-        this.historyRepository = historyRepository;
-        this.bookRepository = bookRepository;
-        this.stats = stats;
-    }
-
-    public StudentStatsService(
-            StudentStatsRepository repository, StudentRepository studentRepository,
-            BookReadHistoryRepository historyRepository, BookRepository bookRepository,
-            StudentStats stats, BookReadHistory history
-    ) {
-        this.repository = repository;
-        this.studentRepository = studentRepository;
-        this.historyRepository = historyRepository;
-        this.bookRepository = bookRepository;
-        this.stats = stats;
-        this.history = history;
-    }
-
     public StudentStats create(Long userId) throws ResourceNotFoundException, DuplicateResourceException {
         Student student = studentRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("not found student"));
+                .orElseThrow(() -> new ResourceNotFoundException("user must exist to proceed"));
 
         boolean exists = student.getStats() != null;
         if (exists) {
             throw new DuplicateResourceException("student stats already exists");
         }
 
+        StudentStats stats = new StudentStats();
         stats.setUser(student);
         stats.setLevel(1);
         stats.setMaxLvlExperience(150);
@@ -178,7 +144,10 @@ public class StudentStatsService {
                 .filter(history -> Objects.equals(history.getBook().getId(), bookId))
                 .findFirst();
 
-        if (result.isEmpty()) {
+        BookReadHistory history = new BookReadHistory();
+        boolean isANewBookReading = result.isEmpty();
+
+        if (isANewBookReading) {
             Book book = bookRepository.findById(bookId)
                     .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
@@ -190,6 +159,7 @@ public class StudentStatsService {
             history.setLastPageRead(page);
         }
 
+        history.setLastUpdate(LocalDate.now());
         history = historyRepository.save(history);
 
         student.getStats().setCurrentBook(history);

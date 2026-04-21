@@ -32,34 +32,6 @@ public class ClassroomService {
     @Autowired
     private UserRepository userRepository;
 
-    private Classroom classroom;
-
-    @Autowired
-    public ClassroomService() {
-        this.classroom = new Classroom();
-    }
-
-    public ClassroomService(
-            ClassroomRepository repository, ProfessorRepository professorRepository,
-            StudentRepository studentRepository, Classroom classroom
-    ) {
-        this.repository = repository;
-        this.professorRepository = professorRepository;
-        this.studentRepository = studentRepository;
-        this.classroom = classroom;
-    }
-
-    public ClassroomService(
-            ClassroomRepository repository, ProfessorRepository professorRepository,
-            StudentRepository studentRepository, UserRepository userRepository, Classroom classroom
-    ) {
-        this.repository = repository;
-        this.professorRepository = professorRepository;
-        this.studentRepository = studentRepository;
-        this.userRepository = userRepository;
-        this.classroom = classroom;
-    }
-
     private String generatePublicCode() {
         return UUID.randomUUID().toString().replaceAll("-", "");
     }
@@ -70,6 +42,7 @@ public class ClassroomService {
             throw new DuplicateResourceException("this classroom already exists");
         }
 
+        Classroom classroom = new Classroom();
         classroom.setPublicCode(this.generatePublicCode());
         classroom.setName(name);
 
@@ -86,7 +59,7 @@ public class ClassroomService {
     }
 
     public Set<UserClassroom> modifyUsersInClassroom(Long id, Set<Long> userIds) throws ResourceNotFoundException, IllegalArgumentException {
-        classroom = repository.findById(id)
+        Classroom classroom = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
 
         Set<UserClassroom> classroomUsers = new HashSet<>();
@@ -113,7 +86,7 @@ public class ClassroomService {
     }
 
     public Classroom changeName(Long id, String name) throws ResourceNotFoundException, DuplicateResourceException {
-        classroom = repository.findById(id)
+        Classroom classroom = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
 
         boolean exists = repository.findByName(name).isPresent();
@@ -127,7 +100,7 @@ public class ClassroomService {
     }
 
     public void delete(Long id) throws ResourceNotFoundException {
-        classroom = repository.findById(id)
+        Classroom classroom = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
 
         repository.delete(classroom);

@@ -12,9 +12,7 @@ import com.vianavitor.simplelibrarygame.repository.GroupRepository;
 import com.vianavitor.simplelibrarygame.service.utils.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -36,6 +34,12 @@ public class GroupOfBooksServiceTest extends BaseServiceTest {
     
     @Mock
     private BookRepository bookRepository;
+
+    @InjectMocks
+    private GroupOfBookService service;
+
+    @Captor
+    private ArgumentCaptor<GroupOfBook> groupBookCaptor;
 
     private Book testBook;
     private Group testGroup;
@@ -67,27 +71,27 @@ public class GroupOfBooksServiceTest extends BaseServiceTest {
         when(groupRepository.findById(1L))
                 .thenReturn(Optional.of(testGroup));
 
-        when(bookRepository.findById(1L))
+        when(bookRepository.findById(2L))
                 .thenReturn(Optional.of(testBook));
 
         when(repository.findById(any(GroupOfBookId.class)))
                 .thenReturn(Optional.empty());
 
-        when(repository.save(testGroupOfBook))
+        when(repository.save(any(GroupOfBook.class)))
                 .thenReturn(null);
 
-        GroupOfBookService service = new GroupOfBookService(
-                repository, bookRepository, groupRepository, testGroupOfBook
-        );
-        service.addBookToGroup(1L, 1L);
-
-        assertThat(testGroupOfBook.getBook()).isNotNull();
-        assertThat(testGroupOfBook.getBook()).isNotNull();
-        assertThat(testGroupOfBook.getCreatedAt()).isToday();
+        service.addBookToGroup(1L, 2L);
 
         verify(groupRepository, times(1)).findById(1L);
-        verify(bookRepository, times(1)).findById(1L);
-        verify(repository, times(1)).save(testGroupOfBook);
+        verify(bookRepository, times(1)).findById(2L);
+        verify(repository, times(1)).save(groupBookCaptor.capture());
+
+        GroupOfBook saved = groupBookCaptor.getValue();
+
+        assertThat(saved.getBook()).isNotNull();
+        assertThat(saved.getId().getGroupId()).isEqualTo(1L);
+        assertThat(saved.getId().getBookId()).isEqualTo(2L);
+        assertThat(saved.getCreatedAt()).isToday();
     }
 
     @Test
@@ -100,10 +104,6 @@ public class GroupOfBooksServiceTest extends BaseServiceTest {
 
         when(repository.findById(any(GroupOfBookId.class)))
                 .thenReturn(Optional.of(Mockito.mock(GroupOfBook.class)));
-
-        GroupOfBookService service = new GroupOfBookService(
-                repository, bookRepository, groupRepository, testGroupOfBook
-        );
 
         assertThrows(Exception.class, () -> {
             service.addBookToGroup(1L, 1L);

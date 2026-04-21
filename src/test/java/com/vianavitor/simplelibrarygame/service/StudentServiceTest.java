@@ -10,9 +10,7 @@ import com.vianavitor.simplelibrarygame.repository.StudentStatsRepository;
 import com.vianavitor.simplelibrarygame.service.utils.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
@@ -39,6 +37,9 @@ class StudentServiceTest extends BaseServiceTest {
 
     @InjectMocks
     private StudentService service;
+
+    @Captor
+    private ArgumentCaptor<StudentStats> statsCaptor;
 
     private Student student;
 
@@ -90,17 +91,21 @@ class StudentServiceTest extends BaseServiceTest {
 
         service.register(student, "1s03KJ2", favoriteGenres);
 
+        Mockito.verify(repository, Mockito.times(1)).existsByUsername("student_1");
+        Mockito.verify(repository, Mockito.times(2)).save(student);
+        Mockito.verify(statsRepository, Mockito.times(1)).save(statsCaptor.capture());
+        Mockito.verify(encoder, Mockito.times(1)).encode("passwd");
+        Mockito.verify(classroomRepository, Mockito.times(1)).findByPublicCode("1s03KJ2");
+
+        StudentStats savedStats = statsCaptor.getValue();
+
         assertThat(student).isNotNull();
         assertThat(student.getId()).isEqualTo(1L);
         assertThat(student.getClassrooms()).contains(classroom);
         assertThat(student.getFavoriteGenre()).contains(action);
         assertThat(student.getStats()).isNotNull();
-
-        Mockito.verify(repository, Mockito.times(1)).existsByUsername("student_1");
-        Mockito.verify(repository, Mockito.times(2)).save(student);
-        Mockito.verify(statsRepository, Mockito.times(1)).save(stats);
-        Mockito.verify(encoder, Mockito.times(1)).encode("passwd");
-        Mockito.verify(classroomRepository, Mockito.times(1)).findByPublicCode("1s03KJ2");
+        assertThat(savedStats).isNotNull();
+        assertThat(savedStats.getStudent()).withFailMessage("different student").isEqualTo(student);
     }
 
     @Test

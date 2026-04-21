@@ -25,23 +25,6 @@ public class GroupOfBookService {
     @Autowired
     private GroupRepository groupRepository;
 
-    private GroupOfBook groupOfBook;
-
-    @Autowired
-    public GroupOfBookService() {
-        this.groupOfBook = new GroupOfBook();
-    }
-
-    public GroupOfBookService(
-            GroupOfBookRepository repository, BookRepository bookRepository,
-            GroupRepository groupRepository, GroupOfBook groupOfBook
-    ) {
-        this.repository = repository;
-        this.bookRepository = bookRepository;
-        this.groupRepository = groupRepository;
-        this.groupOfBook = groupOfBook;
-    }
-
     public void addBookToGroup(Long groupId, Long bookId) throws ResourceNotFoundException, DuplicateResourceException {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new ResourceNotFoundException("not found group"));
@@ -55,6 +38,7 @@ public class GroupOfBookService {
                     throw new DuplicateResourceException("book already saved into the group");
                 });
 
+        GroupOfBook groupOfBook = new GroupOfBook();
         groupOfBook.setId(id);
         groupOfBook.setBook(book);
         groupOfBook.setGroup(group);

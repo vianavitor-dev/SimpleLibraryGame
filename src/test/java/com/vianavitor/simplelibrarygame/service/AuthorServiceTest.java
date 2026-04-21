@@ -7,6 +7,8 @@ import com.vianavitor.simplelibrarygame.repository.AuthorRepository;
 import com.vianavitor.simplelibrarygame.service.utils.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -29,6 +31,9 @@ public class AuthorServiceTest extends BaseServiceTest {
     @InjectMocks
     private AuthorService service;
 
+    @Captor
+    private ArgumentCaptor<Author> authorCaptor;
+
     private Author testAuthor;
 
     @BeforeEach
@@ -43,13 +48,16 @@ public class AuthorServiceTest extends BaseServiceTest {
                 .thenReturn(Optional.empty());
 
         when(repository.save(any(Author.class)))
-                .thenReturn(null);
+                .thenAnswer(invocation -> invocation.getArguments()[0]);
 
-        service.add("J.K. Rowling");
+        Author result = service.add("J.K. Rowling");
 
-        assertThat(testAuthor.getName()).isEqualTo("J.K. Rowling");
+        verify(repository, times(1)).save(authorCaptor.capture());
 
-        verify(repository, times(1)).save(testAuthor);
+        Author saved = authorCaptor.getValue();
+
+        assertThat(result.getName()).isEqualTo("J.K. Rowling");
+        assertThat(saved.getName()).isEqualTo("J.K. Rowling");
     }
 
     @Test

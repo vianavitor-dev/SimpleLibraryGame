@@ -12,8 +12,7 @@ import com.vianavitor.simplelibrarygame.repository.StudentStatsRepository;
 import com.vianavitor.simplelibrarygame.service.utils.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -36,6 +35,18 @@ class StudentStatsServiceTest extends BaseServiceTest {
 
     @Mock
     private BookRepository bookRepository;
+
+    @InjectMocks
+    private StudentStatsService service;
+
+    @Captor
+    private ArgumentCaptor<Student> studentCaptor;
+
+    @Captor
+    private ArgumentCaptor<StudentStats> statsCaptor;
+
+    @Captor
+    private ArgumentCaptor<BookReadHistory> historyCaptor;
 
     private Student testStudent;
     private StudentStats testStats;
@@ -78,26 +89,27 @@ class StudentStatsServiceTest extends BaseServiceTest {
                 .thenReturn(Optional.of(testStudent));
 
         Mockito.when(repository.save(Mockito.any(StudentStats.class)))
-                .thenReturn(testStats);
+                .thenAnswer(invocation -> invocation.getArguments()[0]);
 
         Mockito.when(studentRepository.save(Mockito.any(Student.class)))
                 .thenReturn(null);
 
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats
-        );
         StudentStats result = service.create(1L);
+
+        Mockito.verify(studentRepository, Mockito.times(1)).findById(1L);
+        Mockito.verify(repository, Mockito.times(1)).save(statsCaptor.capture());
+        Mockito.verify(studentRepository, Mockito.times(1)).save(studentCaptor.capture());
+
+        Student savedStudent = studentCaptor.getValue();
+        StudentStats savedStats = statsCaptor.getValue();
 
         assertThat(result).isNotNull();
         assertThat(result.getStudent()).isNotNull();
-        assertThat(result.getStudent()).isEqualTo(testStudent);
-        assertThat(testStudent.getStats()).isNotNull();
-        assertThat(testStudent.getStats()).isEqualTo(testStats);
-
-        Mockito.verify(studentRepository, Mockito.times(1)).findById(1L);
-        Mockito.verify(repository, Mockito.times(1)).save(testStats);
-        Mockito.verify(studentRepository, Mockito.times(1)).save(testStudent);
+        assertThat(result.getStudent()).withFailMessage("different objects (Student)").isEqualTo(testStudent);
+        assertThat(savedStudent.getStats()).isNotNull();
+        assertThat(savedStudent.getStats()).withFailMessage("different objects (StudentStats)").isEqualTo(result);
+        assertThat(savedStats.getLevel()).isEqualTo(1);
+        assertThat(savedStats.getMaxLvlExperience()).isEqualTo(150);
     }
 
     @Test
@@ -107,11 +119,6 @@ class StudentStatsServiceTest extends BaseServiceTest {
 
         Mockito.when(repository.findByStudent(Mockito.any(Student.class)))
                 .thenReturn(Optional.of(testStats));
-
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats
-        );
 
         StudentStats result = service.get(1L);
 
@@ -129,11 +136,6 @@ class StudentStatsServiceTest extends BaseServiceTest {
 
         Mockito.when(repository.save(Mockito.any(StudentStats.class)))
                 .thenReturn(testStats);
-
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats
-        );
 
         int result = service.calculateAverageReadingTime(1L, 57.2);
 
@@ -154,11 +156,6 @@ class StudentStatsServiceTest extends BaseServiceTest {
 
         Mockito.when(repository.save(Mockito.any(StudentStats.class)))
                 .thenReturn(testStats);
-
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats
-        );
 
         int ongoingStack = service.setOngoingSteak(1L);
 
@@ -183,11 +180,6 @@ class StudentStatsServiceTest extends BaseServiceTest {
 
         Mockito.when(repository.save(Mockito.any(StudentStats.class)))
                 .thenReturn(testStats);
-
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats
-        );
 
         StudentStats result = service.addExp(1L, addExp);
 
@@ -216,11 +208,6 @@ class StudentStatsServiceTest extends BaseServiceTest {
         Mockito.when(repository.save(Mockito.any(StudentStats.class)))
                 .thenReturn(testStats);
 
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats
-        );
-
         StudentStats result = service.addExp(1L, addExp);
 
         assertThat(doLevelUp).isTrue();
@@ -239,15 +226,6 @@ class StudentStatsServiceTest extends BaseServiceTest {
 
         testStudent.setStats(testStats);
 
-//        BookReadHistory testHistory = new BookReadHistory();
-//        testHistory.setUser(testStudent);
-//        testHistory.setBook(testBook);
-//        testHistory.setLastPageRead(50);
-//        testHistory.setLastUpdate(LocalDate.now());
-
-//        List<BookReadHistory> list = new ArrayList<>();
-//        list.add(testHistory);
-
         Mockito.when(studentRepository.findById(1L))
                 .thenReturn(Optional.of(testStudent));
 
@@ -263,21 +241,21 @@ class StudentStatsServiceTest extends BaseServiceTest {
         Mockito.when(repository.save(Mockito.any(StudentStats.class)))
                 .thenReturn(null);
 
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats, testHistory
-        );
-
         service.setCurrentBook(1L, 1L, 55);
-
-        assertThat(testStats.getCurrentBook()).isNotNull();
-        assertThat(testStats.getCurrentBook()).isEqualTo(testHistory);
 
         Mockito.verify(studentRepository, Mockito.times(1)).findById(1L);
         Mockito.verify(historyRepository, Mockito.times(1)).findByStudent(testStudent);
-        Mockito.verify(historyRepository, Mockito.times(1)).save(testHistory);
+        Mockito.verify(historyRepository, Mockito.times(1)).save(historyCaptor.capture());
         Mockito.verify(bookRepository, Mockito.times(1)).findById(1L);
         Mockito.verify(repository, Mockito.times(1)).save(testStats);
+
+        BookReadHistory savedHistory = historyCaptor.getValue();
+
+        assertThat(testStats.getCurrentBook()).isNotNull();
+        assertThat(testStats.getCurrentBook()).withFailMessage("different book").isEqualTo(testHistory);
+        assertThat(savedHistory.getLastPageRead()).isEqualTo(55);
+        assertThat(savedHistory.getLastUpdate()).isToday();
+        assertThat(savedHistory.getBook()).withFailMessage("different book").isEqualTo(testBook);
     }
 
     @Test
@@ -301,11 +279,6 @@ class StudentStatsServiceTest extends BaseServiceTest {
 
         Mockito.when(repository.save(Mockito.any(StudentStats.class)))
                 .thenReturn(null);
-
-        StudentStatsService service = new StudentStatsService(
-                repository, studentRepository, historyRepository,
-                bookRepository, testStats, testHistory
-        );
 
         service.setCurrentBook(1L, 1L, 55);
 

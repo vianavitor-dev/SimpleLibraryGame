@@ -12,6 +12,9 @@ import com.vianavitor.simplelibrarygame.repository.UserRepository;
 import com.vianavitor.simplelibrarygame.service.utils.BaseServiceTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import java.util.HashSet;
@@ -38,6 +41,12 @@ public class ClassroomServiceTest extends BaseServiceTest {
     @Mock
     private StudentRepository studentRepository;
 
+    @InjectMocks
+    private ClassroomService service;
+
+    @Captor
+    private ArgumentCaptor<Classroom> classroomCaptor;
+
     private Classroom testClassroom;
 
     @BeforeEach
@@ -49,27 +58,23 @@ public class ClassroomServiceTest extends BaseServiceTest {
 
     @Test
     public void testCreate() {
-        Classroom classroom = new Classroom();
-
         when(repository.findByName("Portuguese Literature 021"))
                 .thenReturn(Optional.empty());
 
-        when(repository.save(classroom))
+        when(repository.save(any(Classroom.class)))
                 .thenReturn(null);
 
-        ClassroomService service = new ClassroomService(
-                repository, professorRepository, studentRepository, classroom
-        );
-
         service.create("Portuguese Literature 021");
+
+        verify(repository, times(1)).findByName("Portuguese Literature 021");
+        verify(repository, times(1)).save(classroomCaptor.capture());
+
+        Classroom classroom = classroomCaptor.getValue();
 
         System.out.println("public code: " + classroom.getPublicCode());
 
         assertThat(classroom.getName()).isEqualTo("Portuguese Literature 021");
         assertThat(classroom.getPublicCode()).isNotBlank();
-
-        verify(repository, times(1)).findByName("Portuguese Literature 021");
-        verify(repository, times(1)).save(classroom);
     }
 
     @Test
@@ -80,10 +85,6 @@ public class ClassroomServiceTest extends BaseServiceTest {
 
         when(repository.findByName("Portuguese Literature 021"))
                 .thenReturn(Optional.of(classroom));
-
-        ClassroomService service = new ClassroomService(
-                repository, professorRepository, studentRepository, classroom
-        );
 
         assertThrows(Exception.class, () -> {
             service.create("Portuguese Literature 021");
@@ -113,10 +114,6 @@ public class ClassroomServiceTest extends BaseServiceTest {
         when(repository.save(testClassroom))
                 .thenReturn(testClassroom);
 
-        ClassroomService service = new ClassroomService(
-                repository, professorRepository, studentRepository, userRepository, testClassroom
-        );
-
         Set<UserClassroom> result = service.modifyUsersInClassroom(1L, IDs);
 
         assertThat(result).isNotEmpty();
@@ -139,10 +136,6 @@ public class ClassroomServiceTest extends BaseServiceTest {
 
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(librarian));
-
-        ClassroomService service = new ClassroomService(
-                repository, professorRepository, studentRepository, userRepository, testClassroom
-        );
 
         assertThrows(IllegalArgumentException.class, () -> {
             service.modifyUsersInClassroom(1L, IDs);
