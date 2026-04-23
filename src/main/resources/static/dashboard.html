@@ -1,93 +1,189 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📚 Plataforma Gamificada de Leitura</title>
-    <style>
-        * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
-        body { background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        h1 { color: #1e3c72; border-left: 5px solid #ff9800; padding-left: 15px; }
-        .login-card, .dashboard-card {
-            background: white; border-radius: 20px; padding: 25px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1); margin-bottom: 25px;
-        }
-        .flex-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; }
-        .flex-row > div { flex: 1; }
-        label { display: block; margin-top: 12px; font-weight: 600; }
-        input, select, textarea {
-            width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ced4da;
-            border-radius: 8px;
-        }
-        button {
-            background: #1e3c72; color: white; border: none; padding: 8px 18px;
-            margin-top: 15px; border-radius: 30px; cursor: pointer; font-weight: bold;
-        }
-        button:hover { background: #ff9800; }
-        .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
-        .tab-btn { background: #e9ecef; border: none; padding: 10px 18px; border-radius: 30px; cursor: pointer; }
-        .tab-btn.active { background: #1e3c72; color: white; }
-        .tab-content { display: none; background: white; padding: 20px; border-radius: 16px; margin-top: 15px; }
-        .tab-content.active { display: block; }
-        .response { background: #e9ecef; padding: 10px; border-radius: 8px; margin-top: 15px; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
-        .badge { display: inline-block; background: #ff9800; color: white; padding: 2px 8px; border-radius: 20px; font-size: 12px; margin-left: 10px; }
-        hr { margin: 20px 0; }
-        .card { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #ff9800; }
-        .step { display: none; }
-        .step.active { display: block; }
-        .genre-checkboxes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .genre-checkboxes label { margin: 0; font-weight: normal; }
-    </style>
+    <title>📚 Gamified Reading Platform</title>
+    <!-- Bootstrap 5 + Icons + jQuery -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+    <style>
+        body { background: #f0f2f5; }
+        .navbar-brand { font-weight: bold; }
+        .tab-content { background: white; border-radius: 16px; padding: 20px; margin-top: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .card { border-left: 4px solid #ff9800; margin-bottom: 20px; }
+        .timer-display { font-size: 2rem; font-family: monospace; font-weight: bold; }
+        .genre-checkboxes { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+        .response-area { background: #e9ecef; padding: 10px; border-radius: 8px; margin-top: 15px; font-family: monospace; font-size: 13px; white-space: pre-wrap; }
+        .list-group-item .btn-group { float: right; }
+        .book-card { transition: transform 0.2s; margin-bottom: 20px; }
+        .book-card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .book-cover { height: 200px; object-fit: cover; background: #f8f9fa; }
+        .rating { color: #ffc107; }
+        .copy-btn { cursor: pointer; font-size: 0.8rem; }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h1>📚 Plataforma Gamificada de Leitura <span id="roleBadge" class="badge"></span></h1>
 
-    <!-- LOGIN SECTION -->
-    <div id="loginSection" class="login-card">
-        <h3>🔐 Login</h3>
-        <div class="flex-row">
-            <div><label>Usuário</label><input type="text" id="loginUsername" placeholder="usuário"></div>
-            <div><label>Senha</label><input type="password" id="loginPassword" placeholder="senha"></div>
-            <div><button onclick="login()">Entrar</button></div>
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand">📚 Gamified Reading Platform</span>
+        <span class="badge bg-warning text-dark" id="roleBadge"></span>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- Login Section -->
+    <div id="loginSection" class="card p-4">
+        <h3><i class="bi bi-box-arrow-in-right"></i> Login</h3>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Username</label>
+                <input type="text" id="loginUsername" class="form-control" placeholder="username">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Password</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="password">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" id="loginBtn">Login</button>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="showRegisterBtn">Register Student</button>
+            </div>
         </div>
-        <div id="loginResponse" class="response"></div>
-        <hr>
-        <h3>📝 Não tem conta? Cadastre-se como aluno</h3>
-        <button onclick="showRegistration()">Cadastrar Aluno</button>
-        <div id="registrationArea" style="display:none; margin-top:20px;"></div>
+        <div id="loginResponse" class="response-area mt-3"></div>
+        <div id="registrationArea" style="display:none;" class="mt-4 border-top pt-3"></div>
     </div>
 
-    <!-- DASHBOARD (hidden until login) -->
+    <!-- Dashboard (hidden until login) -->
     <div id="dashboard" style="display: none;">
-        <div class="tabs" id="tabsContainer"></div>
-        <div id="tabContents"></div>
+        <div id="dashboardIntro"></div>
+        <ul class="nav nav-tabs" id="dashboardTabs" role="tablist"></ul>
+        <div class="tab-content" id="dashboardTabContent"></div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="bookDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bookDetailTitle">Book Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="bookDetailBody"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="finishReadingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Finish Reading Session</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="finishBookId">
+                <label>Last page read</label><input type="number" id="finishLastPage" class="form-control">
+                <label>Summary (each line = 2 XP, max 30)</label><textarea id="finishSummary" rows="4" class="form-control"></textarea>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" id="confirmFinishBtn">Finish</button></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editClassNameModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Change Classroom Name</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><input type="hidden" id="editClassroomId"><label>New Name</label><input type="text" id="newClassName" class="form-control"></div>
+        <div class="modal-footer"><button class="btn btn-primary" id="confirmEditClassNameBtn">Save</button></div>
+    </div></div>
+</div>
+
+<!-- Modal for adding book to group (from group list) -->
+<div class="modal fade" id="addBookToGroupFromGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Add Book to Group</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="addBookGroupId">
+                <label>Select Book</label>
+                <select id="addBookSelect" class="form-select"></select>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" id="confirmAddBookToGroup">Add</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for adding book to group (from book detail) -->
+<div class="modal fade" id="addBookToGroupFromBookModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Add to Group</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" id="addToGroupBookId">
+                <label>Select Group</label>
+                <select id="addGroupSelect" class="form-select"></select>
+            </div>
+            <div class="modal-footer"><button class="btn btn-primary" id="confirmAddBookToGroupFromBook">Add</button></div>
+        </div>
     </div>
 </div>
 
 <script>
+    // ==================== GLOBALS ====================
     let authToken = null;
     let currentRole = null;
     let userId = null;
+    let readingTimerInterval = null;
+    let readingSeconds = 0;
+    let readingActive = false;
+    let currentReadingBookId = null;
+    let currentReadingBookTitle = null;
+    const popupTitles = {
+        success: 'Success',
+        warning: 'Attention',
+        danger: 'Error',
+        info: 'Message'
+    };
 
-    // Helper: decodifica o token e extrai userId e role
+    function escapeHtml(text = '') {
+        return $('<div>').text(String(text)).html();
+    }
+
+    function showPopup(type = 'info', message = '', title = '') {
+        const variant = ['success', 'warning', 'danger', 'info'].includes(type) ? type : 'info';
+        const modalEl = document.getElementById('appMessageModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        $('#appMessageTitle').text(title || popupTitles[variant]);
+        $('#appMessageSubtitle').text(title ? popupTitles[variant] : 'Notification');
+        $('#appMessageBody').text(String(message));
+        const iconMap = { success: '✓', warning: '!', danger: '✕', info: 'i' };
+        $('#appMessageIcon')
+            .removeClass('success warning danger info')
+            .addClass(variant)
+            .text(iconMap[variant]);
+        $('#appMessageHeader')
+            .removeClass('popup-header-success popup-header-warning popup-header-danger popup-header-info')
+            .addClass(`popup-header-${variant}`);
+        modal.show();
+    }
+
+    function notifySuccess(message, title = 'Success') { showPopup('success', message, title); }
+    function notifyWarning(message, title = 'Attention') { showPopup('warning', message, title); }
+    function notifyError(message, title = 'Error') { showPopup('danger', message, title); }
+    function notifyInfo(message, title = 'Message') { showPopup('info', message, title); }
+
+    // Helper functions
     function decodeToken(token) {
         try {
             const decoded = jwt_decode(token);
-            console.log(decoded);
-            return {
-                userId: decoded.id,
-                role: (decoded.role || '').replace(/^ROLE_/, '').toLowerCase()
-            };
-        } catch(e) {
-            console.error("Falha ao decodificar token", e);
-            return null;
-        }
+            return { userId: decoded.id, role: (decoded.role || '').replace(/^ROLE_/, '').toLowerCase() };
+        } catch(e) { return null; }
     }
 
-    // ---------- API HELPER ----------
     async function apiCall(method, url, body = null) {
         const headers = { 'Content-Type': 'application/json' };
         if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
@@ -95,554 +191,711 @@
         if (body) options.body = JSON.stringify(body);
         const response = await fetch(url, options);
         const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Resposta não é JSON: ${text.substring(0, 100)}`);
-        }
+        if (!contentType || !contentType.includes('application/json')) throw new Error(await response.text());
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
         return data;
     }
 
-    function showResponse(divId, data, error = null) {
-        const div = document.getElementById(divId);
-        if (error) div.innerHTML = `❌ Erro: ${error}`;
-        else div.innerHTML = `✅ Sucesso: ${JSON.stringify(data, null, 2)}`;
+    function showResponse(divId, html, error = null) {
+        $(`#${divId}`).html(error ? `<div class="alert alert-danger">❌ ${error}</div>` : html);
     }
 
-    // ---------- LOGIN ----------
+    // ==================== LOGIN / REGISTRATION ====================
     async function login() {
-        const username = document.getElementById('loginUsername').value;
-        const password = document.getElementById('loginPassword').value;
-        if (!username || !password) return alert('Preencha usuário e senha');
-
+        const username = $('#loginUsername').val(), password = $('#loginPassword').val();
+        if (!username || !password) return notifyWarning('Fill username/password');
         try {
-            const response = await fetch('/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Falha no login');
-            const token = data.data;
-            if (!token) throw new Error('Token não recebido');
-            authToken = token;
-
-            // Decodifica o token para obter userId e role
-            const decoded = decodeToken(token);
-            if (!decoded) throw new Error('Token inválido');
+            const resp = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data.message);
+            authToken = data.data;
+            const decoded = decodeToken(authToken);
+            if (!decoded) throw new Error('Invalid token');
             userId = decoded.userId;
             currentRole = decoded.role;
-
-            document.getElementById('roleBadge').innerText = currentRole.toUpperCase();
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
+            $('#roleBadge').text(currentRole.toUpperCase());
+            $('#loginSection').hide();
+            $('#dashboard').show();
             loadDashboard();
-        } catch (err) {
-            showResponse('loginResponse', null, err.message);
-        }
+        } catch(err) { showResponse('loginResponse', null, err.message); }
     }
 
-    // ---------- CADASTRO DE ALUNO (2 etapas) ----------
     async function showRegistration() {
-        const area = document.getElementById('registrationArea');
-        area.style.display = 'block';
-        // Carrega gêneros para a segunda etapa (será feito ao avançar)
-        area.innerHTML = `
-            <div id="regStep1" class="step active">
-                <h4>Etapa 1 – Dados do aluno</h4>
-                <label>Usuário</label><input type="text" id="regUsername">
-                <label>Senha</label><input type="password" id="regPassword">
-                <label>Nome (opcional)</label><input type="text" id="regName">
-                <label>Código da Turma</label><input type="text" id="regClassCode">
-                <button onclick="nextStep()">Próximo</button>
-            </div>
-            <div id="regStep2" class="step">
-                <h4>Etapa 2 – Gêneros favoritos</h4>
-                <div id="genresContainer" class="genre-checkboxes"></div>
-                <button onclick="submitRegistration()">Finalizar Cadastro</button>
-                <button onclick="prevStep()">Voltar</button>
-            </div>
-        `;
+        const area = $('#registrationArea');
+        area.show().html(`
+            <div id="regStep1"><h5>Step 1 – Student Details</h5>
+            <div class="mb-2"><label>Username</label><input type="text" id="regUsername" class="form-control"></div>
+            <div class="mb-2"><label>Password</label><input type="password" id="regPassword" class="form-control"></div>
+            <div class="mb-2"><label>Name (optional)</label><input type="text" id="regName" class="form-control"></div>
+            <div class="mb-2"><label>Classroom Code</label><input type="text" id="regClassCode" class="form-control"></div>
+            <button class="btn btn-primary" id="nextStepBtn">Next</button></div>
+            <div id="regStep2" style="display:none;"><h5>Step 2 – Favorite Genres</h5><div id="genresContainer" class="genre-checkboxes"></div>
+            <button class="btn btn-success mt-2" id="submitRegBtn">Register</button>
+            <button class="btn btn-secondary mt-2" id="prevStepBtn">Back</button></div>
+        `);
+        $('#nextStepBtn').off('click').on('click', nextStep);
+        $('#prevStepBtn').off('click').on('click', () => { $('#regStep2').hide(); $('#regStep1').show(); });
+        $('#submitRegBtn').off('click').on('click', submitRegistration);
     }
 
     let registrationData = {};
-
     async function nextStep() {
         registrationData = {
-            username: document.getElementById('regUsername').value,
-            password: document.getElementById('regPassword').value,
-            name: document.getElementById('regName').value,
-            classroomCode: document.getElementById('regClassCode').value
+            username: $('#regUsername').val(), password: $('#regPassword').val(),
+            name: $('#regName').val(), classroomCode: $('#regClassCode').val()
         };
-        if (!registrationData.username || !registrationData.password || !registrationData.classroomCode) {
-            alert('Preencha todos os campos obrigatórios');
-            return;
-        }
-        // Carregar gêneros do backend
+        if (!registrationData.username || !registrationData.password || !registrationData.classroomCode) { notifyWarning('Fill all required fields'); return; }
         try {
-            const response = await fetch('/api/genres');
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
+            const data = await apiCall('GET', '/api/genres');
             const genres = data.data || [];
-            const container = document.getElementById('genresContainer');
-            container.innerHTML = genres.map(g => `
-                <label><input type="checkbox" value="${g.id}"> ${g.name}</label>
-            `).join('');
-            document.getElementById('regStep1').classList.remove('active');
-            document.getElementById('regStep2').classList.add('active');
-        } catch (err) {
-            alert('Erro ao carregar gêneros: ' + err.message);
-        }
+            const container = $('#genresContainer').empty();
+            genres.forEach(g => container.append(`<div class="form-check"><input class="form-check-input" type="checkbox" value="${g.id}" id="genre_${g.id}"><label class="form-check-label" for="genre_${g.id}">${g.name}</label></div>`));
+            $('#regStep1').hide(); $('#regStep2').show();
+        } catch(err) { notifyError('Error loading genres: ' + err.message); }
     }
-
-    function prevStep() {
-        document.getElementById('regStep2').classList.remove('active');
-        document.getElementById('regStep1').classList.add('active');
-    }
-
     async function submitRegistration() {
         const selectedGenres = [];
-        document.querySelectorAll('#genresContainer input:checked').forEach(cb => {
-            selectedGenres.push({ id: parseInt(cb.value), name: cb.parentElement.innerText.trim() });
-        });
-        const payload = {
-            student: {
-                username: registrationData.username,
-                password: registrationData.password,
-                name: registrationData.name
-            },
-            classroomCode: registrationData.classroomCode,
-            favoriteGenres: selectedGenres
-        };
+        $('#genresContainer input:checked').each(function() { selectedGenres.push({ id: parseInt($(this).val()) }); });
+        const payload = { student: { username: registrationData.username, password: registrationData.password, name: registrationData.name }, classroomCode: registrationData.classroomCode, favoriteGenres: selectedGenres };
         try {
-            const data = await apiCall('POST', '/api/students/register', payload);
-            alert('Cadastro realizado! Faça login.');
-            document.getElementById('registrationArea').style.display = 'none';
-            // limpa campos
-        } catch (err) {
-            alert('Erro no cadastro: ' + err.message);
-        }
+            await apiCall('POST', '/api/students/register', payload);
+            notifySuccess('Registration successful! Please login.');
+            $('#registrationArea').hide().empty();
+        } catch(err) { notifyError('Registration error: ' + err.message); }
     }
 
-    // ---------- DASHBOARD DINÂMICO ----------
+    // ==================== DASHBOARD LOADER ====================
     function loadDashboard() {
-        const tabsContainer = document.getElementById('tabsContainer');
-        const tabContents = document.getElementById('tabContents');
-        tabsContainer.innerHTML = '';
-        tabContents.innerHTML = '';
+        const tabs = { student: ['profile','books','groups','summaries','history'], professor: ['students','summaries','stats'], librarian: ['books','authors'], adm: ['users','classrooms'] }[currentRole] || [];
+        const labels = { profile:'Profile & Stats', books:'Books & Reading', groups:'Reading Groups', summaries:'My Summaries', history:'Reading History', students:'Students', stats:'Statistics', users:'Manage Users', classrooms:'Manage Classes', authors:'Authors' };
+        const icons = { profile:'person', books:'book', groups:'people', summaries:'journal-text', history:'clock-history', students:'people', stats:'graph-up', users:'person-badge', classrooms:'building', authors:'pen' };
+        const tabsContainer = $('#dashboardTabs').empty();
+        const contentContainer = $('#dashboardTabContent').empty();
 
-        let tabs = [];
         if (currentRole === 'student') {
-            tabs = [
-                { id: 'profile', label: '👤 Perfil & Estatísticas' },
-                { id: 'books', label: '📖 Livros & Leitura' },
-                { id: 'groups', label: '👥 Grupos de Leitura' },
-                { id: 'summaries', label: '📝 Meus Resumos' },
-                { id: 'history', label: '📚 Histórico' }
-            ];
-        } else if (currentRole === 'professor') {
-            tabs = [
-                { id: 'students', label: '👩‍🎓 Alunos' },
-                { id: 'summaries', label: '📄 Resumos dos Alunos' },
-                { id: 'stats', label: '📊 Estatísticas' }
-            ];
-        } else if (currentRole === 'librarian') {
-            tabs = [
-                { id: 'books', label: '📚 Gerenciar Livros' },
-                { id: 'authors', label: '✍️ Autores' }
-            ];
-        } else if (currentRole === 'adm') {
-            tabs = [
-                { id: 'users', label: '👥 Gerenciar Usuários' },
-                { id: 'classrooms', label: '🏫 Gerenciar Turmas' }
-            ];
+            $('#dashboardIntro').html(`
+                <div class="dashboard-intro p-3 p-md-4 mb-3">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div>
+                            <div class="section-eyebrow">Student area</div>
+                            <h3 class="mb-1">Everything is in one place</h3>
+                            <p class="section-note">Use the shortcuts to jump directly to books, groups, summaries, or history.</p>
+                        </div>
+                        <div class="quick-action-grid dashboard-shortcuts">
+                            <button class="btn btn-outline-primary shortcut-tab" data-target="profile"><i class="bi bi-person me-1"></i> Profile</button>
+                            <button class="btn btn-outline-primary shortcut-tab" data-target="books"><i class="bi bi-book me-1"></i> Books</button>
+                            <button class="btn btn-outline-primary shortcut-tab" data-target="groups"><i class="bi bi-people me-1"></i> Groups</button>
+                            <button class="btn btn-outline-primary shortcut-tab" data-target="summaries"><i class="bi bi-journal-text me-1"></i> Summaries</button>
+                            <button class="btn btn-outline-primary shortcut-tab" data-target="history"><i class="bi bi-clock-history me-1"></i> History</button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            $('#dashboardIntro .shortcut-tab').off('click').on('click', function() {
+                const target = $(this).data('target');
+                $(`#tab-${target}`).trigger('click');
+            });
+        } else {
+            $('#dashboardIntro').empty();
         }
 
-        tabs.forEach(tab => {
-            const btn = document.createElement('button');
-            btn.className = 'tab-btn';
-            btn.innerText = tab.label;
-            btn.onclick = () => switchTab(tab.id);
-            tabsContainer.appendChild(btn);
-            const contentDiv = document.createElement('div');
-            contentDiv.id = `tab-${tab.id}`;
-            contentDiv.className = 'tab-content';
-            tabContents.appendChild(contentDiv);
+        tabs.forEach((id, idx) => {
+            const active = idx === 0 ? 'active' : '';
+            tabsContainer.append(`<li class="nav-item"><button class="nav-link ${active}" id="tab-${id}" data-bs-toggle="tab" data-bs-target="#content-${id}" type="button" role="tab"><i class="bi bi-${icons[id]}"></i> ${labels[id]}</button></li>`);
+            contentContainer.append(`<div class="tab-pane fade ${active} show" id="content-${id}" role="tabpanel"></div>`);
         });
-        if (tabs.length) switchTab(tabs[0].id);
+        // Render all tabs immediately
+        if (currentRole === 'student') { renderProfileTab(); renderBooksTab(); renderGroupsTab(); renderSummariesTab(); renderHistoryTab(); }
+        else if (currentRole === 'professor') { renderStudentsTab(); renderProfSummariesTab(); renderProfStatsTab(); }
+        else if (currentRole === 'librarian') { renderLibrarianBooksTab(); renderAuthorsTab(); }
+        else if (currentRole === 'adm') { renderAdminUsersTab(); renderAdminClassroomsTab(); }
     }
 
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const activeContent = document.getElementById(`tab-${tabId}`);
-        if (activeContent) activeContent.classList.add('active');
-        if (event && event.target) event.target.classList.add('active');
-        if (activeContent && activeContent.innerHTML.trim() === '') {
-            if (currentRole === 'student') renderStudentTab(tabId, activeContent);
-            else if (currentRole === 'professor') renderProfessorTab(tabId, activeContent);
-            else if (currentRole === 'librarian') renderLibrarianTab(tabId, activeContent);
-            else if (currentRole === 'adm') renderAdminTab(tabId, activeContent);
-        }
+    // ==================== STUDENT ====================
+    function renderProfileTab() {
+        const pane = $('#content-profile');
+        pane.html(`
+            <div class="card p-3 p-md-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                    <div>
+                        <div class="section-eyebrow">Student overview</div>
+                        <h4 class="mb-1"><i class="bi bi-bar-chart"></i> My Stats</h4>
+                        <p class="section-note">Check your progress and keep your reading streak active.</p>
+                    </div>
+                    <div class="quick-action-grid">
+                        <button class="btn btn-outline-primary" id="goBooksBtn"><i class="bi bi-book me-1"></i> Books</button>
+                        <button class="btn btn-outline-primary" id="goGroupsBtn"><i class="bi bi-people me-1"></i> Groups</button>
+                        <button class="btn btn-outline-primary" id="goSummariesBtn"><i class="bi bi-journal-text me-1"></i> Summaries</button>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button class="btn btn-primary" id="refreshStatsBtn"><i class="bi bi-arrow-clockwise me-1"></i> Refresh stats</button>
+                    <button class="btn btn-warning" id="updateStreakBtn"><i class="bi bi-fire me-1"></i> Update streak</button>
+                </div>
+                <div id="statsResponse" class="response-area"></div>
+                <hr class="my-4">
+                <h4 class="mb-2"><i class="bi bi-fire"></i> Reading Streak</h4>
+                <div id="streakResponse" class="response-area mt-2"></div>
+            </div>`);
+        $('#refreshStatsBtn').off('click').on('click', fetchStudentStats);
+        $('#updateStreakBtn').off('click').on('click', updateStreak);
+        $('#goBooksBtn').off('click').on('click', () => $('#tab-books').trigger('click'));
+        $('#goGroupsBtn').off('click').on('click', () => $('#tab-groups').trigger('click'));
+        $('#goSummariesBtn').off('click').on('click', () => $('#tab-summaries').trigger('click'));
+        fetchStudentStats();
     }
-
-    // ------------------------- ALUNO -------------------------
-    function renderStudentTab(tabId, container) {
-        if (tabId === 'profile') {
-            container.innerHTML = `
-                <div class="card"><h3>📊 Minhas Estatísticas</h3>
-                <button onclick="fetchStudentStats()">Atualizar</button>
-                <div id="statsResponse" class="response"></div>
-                <hr>
-                <h3>🔥 Sequência de Leitura</h3>
-                <button onclick="updateStreak()">Atualizar Sequência</button>
-                <div id="streakResponse" class="response"></div>
-                </div>`;
-        } else if (tabId === 'books') {
-            container.innerHTML = `
-                <div class="card"><h3>🔍 Buscar Livros</h3>
-                <input type="text" id="searchTitle" placeholder="Título"><input type="text" id="searchAuthor" placeholder="Autor"><input type="text" id="searchGenre" placeholder="Gênero">
-                <button onclick="searchBooks()">Buscar</button>
-                <div id="searchResponse" class="response"></div>
-                </div>
-                <div class="card"><h3>📖 Sessão de Leitura</h3>
-                <label>Livro ID</label><input type="number" id="readingBookId">
-                <label>Página inicial</label><input type="number" id="startPage" value="1">
-                <button onclick="startReading()">Iniciar Leitura</button>
-                <div id="readingResponse" class="response"></div>
-                <hr>
-                <label>Atualizar página lida</label><input type="number" id="updatePage">
-                <button onclick="updateReadingPage()">Atualizar Página</button>
-                <hr>
-                <label>Finalizar sessão</label>
-                <label>Tempo lido (minutos)</label><input type="number" id="readingMinutes">
-                <label>Páginas lidas nesta sessão</label><input type="number" id="pagesRead">
-                <label>Resumo</label><textarea id="summaryText" rows="3"></textarea>
-                <button onclick="finishReading()">Finalizar e Enviar Resumo</button>
-                </div>
-                <div class="card"><h3>⭐ Avaliar Livro</h3>
-                <label>Livro ID</label><input type="number" id="rateBookId">
-                <label>Nota (1-5)</label><input type="number" id="rateValue" min="1" max="5">
-                <button onclick="rateBook()">Avaliar</button>
-                <div id="rateResponse" class="response"></div>
-                </div>`;
-        } else if (tabId === 'groups') {
-            container.innerHTML = `
-                <div class="card"><h3>➕ Criar Grupo</h3>
-                <label>Nome do Grupo</label><input type="text" id="groupName">
-                <button onclick="createGroup()">Criar</button>
-                <div id="createGroupResponse" class="response"></div>
-                </div>
-                <div class="card"><h3>📋 Meus Grupos</h3>
-                <button onclick="fetchMyGroups()">Carregar</button>
-                <div id="groupsList" class="response"></div>
-                </div>
-                <div class="card"><h3>📚 Adicionar Livro ao Grupo</h3>
-                <label>Grupo ID</label><input type="number" id="addToGroupId">
-                <label>Livro ID</label><input type="number" id="addBookToGroupId">
-                <button onclick="addBookToGroup()">Adicionar</button>
-                <div id="addBookGroupResponse" class="response"></div>
-                </div>`;
-        } else if (tabId === 'summaries') {
-            container.innerHTML = `<div class="card"><h3>📄 Meus Resumos</h3>
-                <button onclick="fetchMySummaries()">Carregar</button>
-                <div id="mySummaries" class="response"></div></div>`;
-        } else if (tabId === 'history') {
-            container.innerHTML = `<div class="card"><h3>📚 Histórico de Leitura</h3>
-                <button onclick="fetchReadingHistory()">Carregar</button>
-                <div id="historyResponse" class="response"></div></div>`;
-        }
-    }
-
-    // Funções do aluno
     async function fetchStudentStats() {
-        try { const data = await apiCall('GET', `/api/stats/${userId}`); showResponse('statsResponse', data); }
+        try { const s = (await apiCall('GET', `/api/stats/${userId}`)).data; showResponse('statsResponse', `<strong>Level:</strong> ${s.level}<br><strong>XP:</strong> ${s.currentExperience}/${s.maxLvlExperience}<br><strong>Streak:</strong> ${s.ongoingStreak}<br><strong>Avg Reading Time:</strong> ${s.averageReadingTime} min<br><strong>Books Read:</strong> ${s.readingCount}`); }
         catch(e) { showResponse('statsResponse', null, e.message); }
     }
     async function updateStreak() {
-        try { const data = await apiCall('POST', `/api/stats/${userId}/streak`); showResponse('streakResponse', data); }
+        try { const data = await apiCall('POST', `/api/stats/${userId}/streak`); showResponse('streakResponse', `<span class="text-success">Streak updated: ${data.data}</span>`); }
         catch(e) { showResponse('streakResponse', null, e.message); }
     }
-    async function searchBooks() {
-        const title = document.getElementById('searchTitle').value;
-        const author = document.getElementById('searchAuthor').value;
-        const genre = document.getElementById('searchGenre').value;
-        let url = '/api/books/';
-        let allBooks = [];
+
+    function renderBooksTab() {
+        const pane = $('#content-books');
+        pane.html(`
+            <div class="card p-3 p-md-4">
+                <div class="mb-3">
+                    <div class="section-eyebrow">Reading library</div>
+                    <h4 class="mb-1">🔍 Search Books</h4>
+                    <p class="section-note">Filter by title, author, or genre to find your next read faster.</p>
+                </div>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md"><input type="text" id="searchTitle" class="form-control" placeholder="Title"></div>
+                    <div class="col-md"><input type="text" id="searchAuthor" class="form-control" placeholder="Author"></div>
+                    <div class="col-md"><input type="text" id="searchGenre" class="form-control" placeholder="Genre"></div>
+                    <div class="col-md-auto d-grid"><button class="btn btn-secondary" id="searchBooksBtn">Search</button></div>
+                </div>
+                <div id="booksGrid" class="row mt-3"></div>
+            </div>
+        `);
+        $('#searchBooksBtn').off('click').on('click', () => loadBooks());
+        loadBooks();
+    }
+
+    async function loadBooks() {
         try {
-            const data = await apiCall('GET', url);
-            allBooks = data.data || [];
-            let filtered = allBooks;
-            if (title) filtered = filtered.filter(b => b.title.toLowerCase().includes(title.toLowerCase()));
-            if (author) filtered = filtered.filter(b => b.bookAuthors.some(a => a.name.toLowerCase().includes(author.toLowerCase())));
-            if (genre) filtered = filtered.filter(b => b.bookGenres.some(g => g.name.toLowerCase().includes(genre.toLowerCase())));
-            showResponse('searchResponse', filtered);
-        } catch(e) { showResponse('searchResponse', null, e.message); }
+            const books = (await apiCall('GET', '/api/books/')).data || [];
+            const title = $('#searchTitle').val().toLowerCase();
+            const author = $('#searchAuthor').val().toLowerCase();
+            const genre = $('#searchGenre').val().toLowerCase();
+            let filtered = books;
+            if (title) filtered = filtered.filter(b => b.title.toLowerCase().includes(title));
+            if (author) filtered = filtered.filter(b => b.bookAuthors.some(a => a.name.toLowerCase().includes(author)));
+            if (genre) filtered = filtered.filter(b => b.bookGenres.some(g => g.name.toLowerCase().includes(genre)));
+
+            const grid = $('#booksGrid').empty();
+            if (filtered.length === 0) {
+                grid.html('<div class="col-12 text-center">No books found.</div>');
+                return;
+            }
+            filtered.forEach(book => {
+                const avgRating = book.ratingValue ? book.ratingValue.toFixed(1) : '0.0';
+                const stars = '★'.repeat(Math.floor(book.ratingValue)) + '☆'.repeat(5 - Math.floor(book.ratingValue));
+                const available = book.available && book.quantity > 0;
+                const card = $(`
+                    <div class="col-md-4 col-lg-3">
+                        <div class="card book-card h-100">
+                            <img src="${book.imagePath || 'https://via.placeholder.com/200x300?text=No+Cover'}" class="card-img-top book-cover" alt="Cover">
+                            <div class="card-body">
+                                <h5 class="card-title">${escapeHtml(book.title)}</h5>
+                                <p class="card-text"><small class="text-muted">By ${book.bookAuthors.map(a=>a.name).join(', ')}</small></p>
+                                <div class="rating">${stars} (${avgRating})</div>
+                                ${!available ? '<span class="badge bg-danger">Unavailable</span>' : ''}
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <button class="btn btn-sm btn-primary w-100 see-more" data-book='${JSON.stringify(book)}' ${!available ? 'disabled' : ''}>See more</button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                card.find('.see-more').on('click', () => showBookDetail(book));
+                grid.append(card);
+            });
+        } catch(e) { showResponse('booksGrid', null, e.message); }
     }
-    async function startReading() {
-        const bookId = document.getElementById('readingBookId').value;
-        const page = document.getElementById('startPage').value;
-        const body = { userId, bookId: parseInt(bookId), page: parseInt(page) };
-        try { const data = await apiCall('POST', '/api/stats/set-current-book', body); showResponse('readingResponse', data); }
-        catch(e) { showResponse('readingResponse', null, e.message); }
-    }
-    async function updateReadingPage() {
-        const bookId = document.getElementById('readingBookId').value;
-        const page = document.getElementById('updatePage').value;
-        if (!bookId || !page) return;
-        const body = { userId, bookId: parseInt(bookId), page: parseInt(page) };
-        try { const data = await apiCall('POST', '/api/stats/set-current-book', body); showResponse('readingResponse', data); }
-        catch(e) { showResponse('readingResponse', null, e.message); }
-    }
-    async function finishReading() {
-        const bookId = document.getElementById('readingBookId').value;
-        const minutes = parseInt(document.getElementById('readingMinutes').value);
-        const pages = parseInt(document.getElementById('pagesRead').value);
-        const summaryText = document.getElementById('summaryText').value;
-        if (!bookId || !minutes || !pages || !summaryText) {
-            alert('Preencha todos os campos');
-            return;
+
+    function showBookDetail(book) {
+        const avgRating = book.ratingValue ? book.ratingValue.toFixed(1) : '0.0';
+        const stars = '★'.repeat(Math.floor(book.ratingValue)) + '☆'.repeat(5 - Math.floor(book.ratingValue));
+        const authors = book.bookAuthors.map(a=>a.name).join(', ');
+        const genres = book.bookGenres.map(g=>g.name).join(', ');
+        const available = book.available && book.quantity > 0;
+        $('#bookDetailTitle').text(book.title);
+        $('#bookDetailBody').html(`
+            <div class="row">
+                <div class="col-md-4">
+                    <img src="${book.imagePath || 'https://via.placeholder.com/200x300?text=No+Cover'}" class="img-fluid rounded" alt="Cover">
+                </div>
+                <div class="col-md-8">
+                    <p><strong>Author(s):</strong> ${authors}</p>
+                    <p><strong>Genre(s):</strong> ${genres}</p>
+                    <p><strong>Synopsis:</strong> ${book.synopsis || 'No synopsis available.'}</p>
+                    <p><strong>Pages:</strong> ${book.pageCount}</p>
+                    <p><strong>Release Date:</strong> ${book.releasedAt || 'Unknown'}</p>
+                    <p><strong>Rating:</strong> ${stars} (${avgRating})</p>
+                    <p><strong>Available:</strong> ${available ? 'Yes' : 'No'} ${available ? `(Quantity: ${book.quantity})` : ''}</p>
+                    ${available ? `<button class="btn btn-success" id="startReadingFromModalBtn">Start Reading</button>` : '<button class="btn btn-secondary" disabled>Not Available</button>'}
+                    <button class="btn btn-info mt-2" id="addBookToGroupFromBookBtn">Add to Group</button>
+                    <div id="readingSessionModal" style="margin-top:15px; display:none;">
+                        <div class="timer-display" id="modalTimerDisplay">00:00:00</div>
+                        <button class="btn btn-warning btn-sm" id="modalPauseBtn">Pause</button>
+                        <button class="btn btn-danger btn-sm" id="modalCancelBtn">Cancel</button>
+                        <button class="btn btn-primary btn-sm" id="modalFinishBtn">Finish Reading</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        if (available) {
+            $('#startReadingFromModalBtn').off('click').on('click', () => {
+                if (readingTimerInterval) clearInterval(readingTimerInterval);
+                readingSeconds = 0;
+                readingActive = true;
+                currentReadingBookId = book.id;
+                currentReadingBookTitle = book.title;
+                updateModalTimerDisplay();
+                readingTimerInterval = setInterval(() => {
+                    if (readingActive) {
+                        readingSeconds++;
+                        updateModalTimerDisplay();
+                    }
+                }, 1000);
+                $('#startReadingFromModalBtn').hide();
+                $('#readingSessionModal').show();
+                $('#modalPauseBtn').off('click').on('click', () => {
+                    readingActive = !readingActive;
+                    $('#modalPauseBtn').text(readingActive ? 'Pause' : 'Resume');
+                });
+                $('#modalCancelBtn').off('click').on('click', () => {
+                    if (readingTimerInterval) clearInterval(readingTimerInterval);
+                    readingActive = false;
+                    readingSeconds = 0;
+                    currentReadingBookId = null;
+                    $('#readingSessionModal').hide();
+                    $('#startReadingFromModalBtn').show();
+                    updateModalTimerDisplay();
+                });
+                $('#modalFinishBtn').off('click').on('click', () => {
+                    if (!currentReadingBookId) return;
+                    $('#finishBookId').val(currentReadingBookId);
+                    $('#finishLastPage').val('');
+                    $('#finishSummary').val('');
+                    $('#finishReadingModal').modal('show');
+                });
+            });
         }
-        // Envia resumo
+        // Add to group from book detail
+        $('#addBookToGroupFromBookBtn').off('click').on('click', async () => {
+            // Load groups and show modal
+            try {
+                const groupsData = await apiCall('GET', `/api/groups/student/${userId}`);
+                const groups = groupsData.data || [];
+                if (groups.length === 0) {
+                    notifyWarning('You have no groups. Create a group first.');
+                    return;
+                }
+                const select = $('#addGroupSelect');
+                select.empty();
+                groups.forEach(g => select.append(`<option value="${g.id}">${escapeHtml(g.name)}</option>`));
+                $('#addToGroupBookId').val(book.id);
+                $('#addBookToGroupFromBookModal').modal('show');
+            } catch(e) { notifyError('Failed to load groups: ' + e.message); }
+        });
+        $('#bookDetailModal').modal('show');
+    }
+
+    function updateModalTimerDisplay() {
+        const hours = Math.floor(readingSeconds / 3600);
+        const minutes = Math.floor((readingSeconds % 3600) / 60);
+        const secs = readingSeconds % 60;
+        $('#modalTimerDisplay').text(`${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`);
+    }
+
+    async function finishReadingFromModal() {
+        const bookId = $('#finishBookId').val();
+        const lastPage = $('#finishLastPage').val();
+        const summaryText = $('#finishSummary').val();
+        if (!lastPage || !summaryText) { notifyWarning('Please fill last page and summary.'); return; }
+        const lines = summaryText.split(/\r?\n/).length;
+        let exp = Math.min(lines * 2, 30);
         try {
             await apiCall('POST', '/api/summaries', { text: summaryText, bookId: parseInt(bookId), studentId: userId });
-            // Calcula EXP (exemplo: 5 por página + 10 por minuto)
-            const exp = (pages * 5) + (minutes * 10);
+            await apiCall('POST', '/api/stats/set-current-book', { userId, bookId: parseInt(bookId), page: parseInt(lastPage) });
             await apiCall('POST', `/api/stats/${userId}/add-exp`, { exp });
-            alert('Sessão finalizada! EXP adicionado.');
-            document.getElementById('readingResponse').innerHTML = '✅ Sessão finalizada com sucesso!';
-        } catch(e) { showResponse('readingResponse', null, e.message); }
+            notifySuccess(`Session finished! You earned ${exp} XP.`);
+            if (readingTimerInterval) clearInterval(readingTimerInterval);
+            readingActive = false;
+            readingSeconds = 0;
+            currentReadingBookId = null;
+            $('#finishReadingModal').modal('hide');
+            $('#bookDetailModal').modal('hide');
+        } catch(e) { notifyError('Error finishing session: ' + e.message); }
     }
-    async function rateBook() {
-        const bookId = document.getElementById('rateBookId').value;
-        const rate = document.getElementById('rateValue').value;
-        try { const data = await apiCall('POST', `/api/books/${bookId}/rate`, { rate: parseInt(rate) }); showResponse('rateResponse', data); }
-        catch(e) { showResponse('rateResponse', null, e.message); }
+
+    // Groups tab - with add book button per group
+    function renderGroupsTab() {
+        const pane = $('#content-groups');
+        pane.html(`
+            <div class="card p-3 p-md-4">
+                <div class="section-eyebrow">Study groups</div>
+                <h4 class="mb-1">➕ Create Group</h4>
+                <p class="section-note">Make a group for classmates and organize books together.</p>
+                <label>Group Name</label><input type="text" id="groupName" class="form-control">
+                <button class="btn btn-primary mt-2" id="createGroupBtn">Create</button><div id="createGroupResponse" class="response-area mt-2"></div>
+            </div>
+            <div class="card p-3 p-md-4 mt-3"><h4 class="mb-1">📋 My Groups</h4><div id="groupsList" class="response-area"></div></div>
+        `);
+        $('#createGroupBtn').off('click').on('click', createGroup);
+        fetchMyGroups();
     }
+
     async function createGroup() {
-        const name = document.getElementById('groupName').value;
-        try { const data = await apiCall('POST', '/api/groups', { name, studentId: userId }); showResponse('createGroupResponse', data); }
+        const name = $('#groupName').val();
+        if (!name) return;
+        try { const data = await apiCall('POST', '/api/groups', { name, studentId: userId }); showResponse('createGroupResponse', `<span class="text-success">Group created successfully!</span>`); fetchMyGroups(); }
         catch(e) { showResponse('createGroupResponse', null, e.message); }
     }
+
     async function fetchMyGroups() {
-        try { const data = await apiCall('GET', `/api/groups/student/${userId}`); showResponse('groupsList', data); }
-        catch(e) { showResponse('groupsList', null, e.message); }
+        try {
+            const data = await apiCall('GET', `/api/groups/student/${userId}`);
+            let html = '<div class="list-group">';
+            data.data.forEach(g => {
+                html += `<div class="list-group-item d-flex justify-content-between align-items-center">
+                            ${escapeHtml(g.name)}
+                            <button class="btn btn-sm btn-primary add-book-to-group-btn" data-id="${g.id}" data-name="${escapeHtml(g.name)}">Add Book</button>
+                         </div>`;
+            });
+            html += '</div>';
+            showResponse('groupsList', html);
+            $('.add-book-to-group-btn').off('click').on('click', async function() {
+                const groupId = $(this).data('id');
+                const groupName = $(this).data('name');
+                // Load books and show modal
+                try {
+                    const booksData = await apiCall('GET', '/api/books/');
+                    const books = booksData.data || [];
+                    if (books.length === 0) {
+                        notifyWarning('No books available to add.');
+                        return;
+                    }
+                    const select = $('#addBookSelect');
+                    select.empty();
+                    books.forEach(b => select.append(`<option value="${b.id}">${escapeHtml(b.title)}</option>`));
+                    $('#addBookGroupId').val(groupId);
+                    $('#addBookToGroupFromGroupModal').modal('show');
+                } catch(e) { notifyError('Failed to load books: ' + e.message); }
+            });
+        } catch(e) { showResponse('groupsList', null, e.message); }
     }
-    async function addBookToGroup() {
-        const groupId = document.getElementById('addToGroupId').value;
-        const bookId = document.getElementById('addBookToGroupId').value;
-        try { const data = await apiCall('POST', `/api/group-books/add?groupId=${groupId}&bookId=${bookId}`); showResponse('addBookGroupResponse', data); }
-        catch(e) { showResponse('addBookGroupResponse', null, e.message); }
+
+    // Confirm add book to group (from group modal)
+    async function confirmAddBookToGroup() {
+        const groupId = $('#addBookGroupId').val();
+        const bookId = $('#addBookSelect').val();
+        if (!groupId || !bookId) return;
+        try {
+            await apiCall('POST', `/api/group-books/add?groupId=${groupId}&bookId=${bookId}`);
+            notifySuccess('Book added to group!');
+            $('#addBookToGroupFromGroupModal').modal('hide');
+        } catch(e) { notifyError('Error: ' + e.message); }
+    }
+
+    // Confirm add book to group (from book modal)
+    async function confirmAddBookToGroupFromBook() {
+        const bookId = $('#addToGroupBookId').val();
+        const groupId = $('#addGroupSelect').val();
+        if (!bookId || !groupId) return;
+        try {
+            await apiCall('POST', `/api/group-books/add?groupId=${groupId}&bookId=${bookId}`);
+            notifySuccess('Book added to group!');
+            $('#addBookToGroupFromBookModal').modal('hide');
+        } catch(e) { notifyError('Error: ' + e.message); }
+    }
+
+    function renderSummariesTab() {
+        const pane = $('#content-summaries');
+        pane.html(`<div class="card p-3 p-md-4"><div class="section-eyebrow">Your notes</div><h4 class="mb-1">📄 My Summaries</h4><p class="section-note">Review what you wrote for each book.</p><button class="btn btn-secondary mb-2" id="loadSummariesBtn">Load</button><div id="mySummaries" class="response-area"></div></div>`);
+        $('#loadSummariesBtn').off('click').on('click', fetchMySummaries);
     }
     async function fetchMySummaries() {
-        try { const data = await apiCall('GET', `/api/summaries/student/${userId}`); showResponse('mySummaries', data); }
-        catch(e) { showResponse('mySummaries', null, e.message); }
+        try {
+            const data = await apiCall('GET', `/api/summaries/student/${userId}`);
+            let html = '<div class="list-group">';
+            data.data.forEach(s => html += `<div class="list-group-item"><strong>Book:</strong> ${escapeHtml(s.book.title)}<br><strong>Summary:</strong> ${escapeHtml(s.text)}<br><small>${s.written_at}</small></div>`);
+            html += '</div>';
+            showResponse('mySummaries', html);
+        } catch(e) { showResponse('mySummaries', null, e.message); }
+    }
+
+    function renderHistoryTab() {
+        const pane = $('#content-history');
+        pane.html(`<div class="card p-3 p-md-4"><div class="section-eyebrow">Recent activity</div><h4 class="mb-1">📚 Reading History</h4><p class="section-note">See what you last read and where you stopped.</p><button class="btn btn-secondary mb-2" id="loadHistoryBtn">Load</button><div id="historyResponse" class="response-area"></div></div>`);
+        $('#loadHistoryBtn').off('click').on('click', fetchReadingHistory);
     }
     async function fetchReadingHistory() {
-        try { const data = await apiCall('GET', `/api/read-history/student/${userId}`); showResponse('historyResponse', data); }
-        catch(e) { showResponse('historyResponse', null, e.message); }
+        try {
+            const data = await apiCall('GET', `/api/read-history/student/${userId}`);
+            let html = '<table class="table table-sm"><thead><tr><th>Book</th><th>Last Page</th><th>Last Update</th></tr></thead><tbody>';
+            data.data.forEach(h => html += `<tr><td>${escapeHtml(h.book.title)}</td><td>${h.last_page_read}</td><td>${h.last_update}</td></tr>`);
+            html += '</tbody></table>';
+            showResponse('historyResponse', html);
+        } catch(e) { showResponse('historyResponse', null, e.message); }
     }
 
-    // ------------------------- PROFESSOR -------------------------
-    function renderProfessorTab(tabId, container) {
-        if (tabId === 'students') {
-            container.innerHTML = `<div class="card"><h3>👩‍🎓 Alunos</h3>
-                <button onclick="fetchAllStudents()">Carregar</button>
-                <div id="studentsList" class="response"></div></div>`;
-        } else if (tabId === 'summaries') {
-            container.innerHTML = `<div class="card"><h3>📄 Resumos por Livro</h3>
-                <label>Livro ID</label><input type="number" id="profBookId">
-                <button onclick="fetchSummariesByBook()">Carregar</button>
-                <div id="profSummaries" class="response"></div></div>`;
-        } else if (tabId === 'stats') {
-            container.innerHTML = `<div class="card"><h3>📊 Estatísticas do Aluno</h3>
-                <label>ID do Aluno</label><input type="number" id="targetStudentId">
-                <button onclick="fetchStudentStatsById()">Carregar</button>
-                <div id="profStatsResponse" class="response"></div></div>`;
-        }
+    // ==================== PROFESSOR ====================
+    function renderStudentsTab() {
+        const pane = $('#content-students');
+        pane.html(`<div class="card p-3"><h4>Students</h4><button class="btn btn-secondary mb-2" id="loadAllStudentsBtn">Load</button><div id="studentsList" class="response-area"></div></div>`);
+        $('#loadAllStudentsBtn').off('click').on('click', fetchAllStudents);
     }
     async function fetchAllStudents() {
-        try { const data = await apiCall('GET', '/api/students'); showResponse('studentsList', data); }
-        catch(e) { showResponse('studentsList', null, e.message); }
+        try {
+            const data = await apiCall('GET', '/api/students');
+            let html = '<ul class="list-group">';
+            data.data.forEach(s => html += `<li class="list-group-item">${escapeHtml(s.name || s.username)}</li>`);
+            html += '</ul>';
+            showResponse('studentsList', html);
+        } catch(e) { showResponse('studentsList', null, e.message); }
+    }
+    function renderProfSummariesTab() {
+        const pane = $('#content-summaries');
+        pane.html(`<div class="card p-3"><h4>Summaries by Book</h4><label>Book ID</label><input type="number" id="profBookId" class="form-control"><button class="btn btn-primary mt-2" id="profLoadSummariesBtn">Load</button><div id="profSummaries" class="response-area mt-2"></div></div>`);
+        $('#profLoadSummariesBtn').off('click').on('click', fetchSummariesByBook);
     }
     async function fetchSummariesByBook() {
-        const bookId = document.getElementById('profBookId').value;
-        try { const data = await apiCall('GET', `/api/summaries/book/${bookId}`); showResponse('profSummaries', data); }
-        catch(e) { showResponse('profSummaries', null, e.message); }
+        const bookId = $('#profBookId').val();
+        if (!bookId) return;
+        try {
+            const data = await apiCall('GET', `/api/summaries/book/${bookId}`);
+            let html = '<div class="list-group">';
+            data.data.forEach(s => html += `<div class="list-group-item"><strong>Student:</strong> ${escapeHtml(s.written_by.name)}<br><strong>Summary:</strong> ${escapeHtml(s.text)}<br><small>${s.written_at}</small></div>`);
+            html += '</div>';
+            showResponse('profSummaries', html);
+        } catch(e) { showResponse('profSummaries', null, e.message); }
+    }
+    function renderProfStatsTab() {
+        const pane = $('#content-stats');
+        pane.html(`<div class="card p-3"><h4>Student Stats</h4><label>Student ID</label><input type="number" id="targetStudentId" class="form-control"><button class="btn btn-primary mt-2" id="profLoadStatsBtn">Load</button><div id="profStatsResponse" class="response-area mt-2"></div></div>`);
+        $('#profLoadStatsBtn').off('click').on('click', fetchStudentStatsById);
     }
     async function fetchStudentStatsById() {
-        const sid = document.getElementById('targetStudentId').value;
-        try { const data = await apiCall('GET', `/api/stats/${sid}`); showResponse('profStatsResponse', data); }
-        catch(e) { showResponse('profStatsResponse', null, e.message); }
+        const sid = $('#targetStudentId').val();
+        if (!sid) return;
+        try {
+            const s = (await apiCall('GET', `/api/stats/${sid}`)).data;
+            const html = `<strong>Level:</strong> ${s.level}<br><strong>XP:</strong> ${s.currentExperience}/${s.maxLvlExperience}<br><strong>Streak:</strong> ${s.ongoingStreak}<br><strong>Avg Reading Time:</strong> ${s.averageReadingTime} min<br><strong>Books Read:</strong> ${s.readingCount}`;
+            showResponse('profStatsResponse', html);
+        } catch(e) { showResponse('profStatsResponse', null, e.message); }
     }
 
-    // ------------------------- BIBLIOTECÁRIO -------------------------
-    function renderLibrarianTab(tabId, container) {
-        if (tabId === 'books') {
-            container.innerHTML = `
-                <div class="card"><h3>➕ Adicionar Livro</h3>
-                <label>Título</label><input type="text" id="librarianTitle">
-                <label>Sinopse</label><textarea id="librarianSynopsis"></textarea>
-                <label>Páginas</label><input type="number" id="librarianPages">
-                <label>Data de Lançamento</label><input type="date" id="librarianRelease">
-                <label>Autores (nomes separados por vírgula)</label><input id="librarianAuthors">
-                <label>Gêneros (nomes separados por vírgula)</label><input id="librarianGenres">
-                <label>Confirmar (ignorar duplicidade de título)</label><input type="checkbox" id="librarianConfirmed">
-                <button onclick="addBookByLibrarian()">Adicionar Livro</button>
-                <div id="librarianAddResponse" class="response"></div>
-                </div>
-                <div class="card"><h3>✏️ Atualizar Disponibilidade</h3>
-                <label>Livro ID</label><input type="number" id="updateBookId">
-                <label>Disponível?</label><select id="availableStatus"><option value="true">Sim</option><option value="false">Não</option></select>
-                <button onclick="updateBookAvailability()">Atualizar</button>
-                <div id="availabilityResponse" class="response"></div>
-                </div>
-                <div class="card"><h3>📖 Listar Livros</h3>
-                <button onclick="listAllBooks()">Carregar</button>
-                <div id="allBooksResponse" class="response"></div>
-                </div>`;
-        } else if (tabId === 'authors') {
-            container.innerHTML = `<div class="card"><h3>✍️ Adicionar Autor</h3>
-                <label>Nome do Autor</label><input type="text" id="authorName">
-                <button onclick="addAuthor()">Adicionar</button>
-                <div id="authorResponse" class="response"></div>
-                <hr><button onclick="listAuthors()">Listar Autores</button>
-                <div id="authorsList" class="response"></div></div>`;
-        }
+    // ==================== LIBRARIAN ====================
+    function renderLibrarianBooksTab() {
+        const pane = $('#content-books');
+        pane.html(`
+            <div class="card p-3"><h4>➕ Add Book</h4><div class="mb-2"><label>Title</label><input type="text" id="librarianTitle" class="form-control"></div><div class="mb-2"><label>Synopsis</label><textarea id="librarianSynopsis" class="form-control"></textarea></div><div class="mb-2"><label>Pages</label><input type="number" id="librarianPages" class="form-control"></div><div class="mb-2"><label>Release Date</label><input type="date" id="librarianRelease" class="form-control"></div><div class="mb-2"><label>Authors (comma)</label><input id="librarianAuthors" class="form-control"></div><div class="mb-2"><label>Genres (comma)</label><input id="librarianGenres" class="form-control"></div><div class="form-check mb-2"><input type="checkbox" id="librarianConfirmed"><label class="form-check-label">Confirm duplicate title</label></div><button class="btn btn-primary" id="addBookBtn">Add Book</button><div id="librarianAddResponse" class="response-area mt-2"></div></div>
+            <div class="card p-3 mt-3"><h4>✏️ Update Availability</h4><div id="booksAvailabilityList" class="mt-2"></div><div id="availabilityResponse" class="response-area mt-2"></div></div>
+            <div class="card p-3 mt-3"><h4>📖 List Books</h4><button class="btn btn-secondary" id="listAllBooksBtn">Load</button><div id="allBooksResponse" class="response-area mt-2"></div></div>
+        `);
+        $('#addBookBtn').off('click').on('click', addBookByLibrarian);
+        $('#listAllBooksBtn').off('click').on('click', listAllBooks);
+        loadBooksForAvailability();
     }
     async function addBookByLibrarian() {
-        const title = document.getElementById('librarianTitle').value;
-        const synopsis = document.getElementById('librarianSynopsis').value;
-        const pages = parseInt(document.getElementById('librarianPages').value);
-        const releasedAt = document.getElementById('librarianRelease').value;
-        const authorsStr = document.getElementById('librarianAuthors').value;
-        const genresStr = document.getElementById('librarianGenres').value;
-        const confirmed = document.getElementById('librarianConfirmed').checked;
-        const authors = authorsStr.split(',').filter(s=>s.trim()).map(s => ({ name: s.trim() }));
-        const genres = genresStr.split(',').filter(s=>s.trim()).map(s => ({ name: s.trim() }));
-        const bookInfo = { title, synopsis, authors, genres, pages, releasedAt };
+        const title = $('#librarianTitle').val(), synopsis = $('#librarianSynopsis').val(), pages = parseInt($('#librarianPages').val()), releasedAt = $('#librarianRelease').val();
+        const authors = $('#librarianAuthors').val().split(',').filter(s=>s.trim()).map(s=>({name:s.trim()}));
+        const genres = $('#librarianGenres').val().split(',').filter(s=>s.trim()).map(s=>({name:s.trim()}));
+        const confirmed = $('#librarianConfirmed').is(':checked');
         try {
-            const data = await apiCall('POST', '/api/books', { book: bookInfo, confirmed });
-            showResponse('librarianAddResponse', data);
+            await apiCall('POST', '/api/books', { book: { title, synopsis, authors, genres, pages, releasedAt }, confirmed });
+            showResponse('librarianAddResponse', '<span class="text-success">Book added!</span>');
+            loadBooksForAvailability();
         } catch(e) { showResponse('librarianAddResponse', null, e.message); }
     }
-    async function updateBookAvailability() {
-        const id = document.getElementById('updateBookId').value;
-        const available = document.getElementById('availableStatus').value === 'true';
-        try { const data = await apiCall('PATCH', `/api/books/${id}/available?available=${available}`); showResponse('availabilityResponse', data); }
+    async function loadBooksForAvailability() {
+        try {
+            const books = (await apiCall('GET', '/api/books/')).data || [];
+            let html = '<div class="list-group">';
+            books.forEach(b => html += `<div class="list-group-item d-flex justify-content-between align-items-center">${escapeHtml(b.title)} <button class="btn btn-sm btn-warning toggle-availability" data-id="${b.id}" data-available="${b.available}">Toggle Availability</button></div>`);
+            html += '</div>';
+            $('#booksAvailabilityList').html(html);
+            $('.toggle-availability').off('click').on('click', function() { updateBookAvailability($(this).data('id'), !($(this).data('available') === 'true')); });
+        } catch(e) { console.error(e); }
+    }
+    async function updateBookAvailability(id, available) {
+        try { await apiCall('PATCH', `/api/books/${id}/available?available=${available}`); showResponse('availabilityResponse', '<span class="text-success">Availability updated!</span>'); loadBooksForAvailability(); }
         catch(e) { showResponse('availabilityResponse', null, e.message); }
     }
     async function listAllBooks() {
-        try { const data = await apiCall('GET', '/api/books/'); showResponse('allBooksResponse', data); }
-        catch(e) { showResponse('allBooksResponse', null, e.message); }
+        try {
+            const books = (await apiCall('GET', '/api/books/')).data || [];
+            let html = '<table class="table table-sm"><thead><tr><th>Title</th><th>Available</th><th>Quantity</th></tr></thead><tbody>';
+            books.forEach(b => html += `<tr><td>${escapeHtml(b.title)}</td><td>${b.available ? 'Yes' : 'No'}</td><td>${b.quantity}</td></tr>`);
+            html += '</tbody></table>';
+            showResponse('allBooksResponse', html);
+        } catch(e) { showResponse('allBooksResponse', null, e.message); }
+    }
+
+    function renderAuthorsTab() {
+        const pane = $('#content-authors');
+        pane.html(`<div class="card p-3"><h4>✍️ Add Author</h4><label>Author Name</label><input type="text" id="authorName" class="form-control"><button class="btn btn-primary mt-2" id="addAuthorBtn">Add</button><div id="authorResponse" class="response-area mt-2"></div><hr><button class="btn btn-secondary mt-2" id="listAuthorsBtn">List Authors</button><div id="authorsList" class="response-area mt-2"></div></div>`);
+        $('#addAuthorBtn').off('click').on('click', addAuthor);
+        $('#listAuthorsBtn').off('click').on('click', listAuthors);
     }
     async function addAuthor() {
-        const name = document.getElementById('authorName').value;
-        try { const data = await apiCall('POST', '/api/authors', { name }); showResponse('authorResponse', data); }
+        const name = $('#authorName').val();
+        if (!name) return;
+        try { await apiCall('POST', '/api/authors', { name }); showResponse('authorResponse', '<span class="text-success">Author added!</span>'); }
         catch(e) { showResponse('authorResponse', null, e.message); }
     }
     async function listAuthors() {
-        try { const data = await apiCall('GET', '/api/authors'); showResponse('authorsList', data); }
-        catch(e) { showResponse('authorsList', null, e.message); }
+        try {
+            const data = await apiCall('GET', '/api/authors');
+            let html = '<ul class="list-group">';
+            data.data.forEach(a => html += `<li class="list-group-item">${escapeHtml(a.name)}</li>`);
+            html += '</ul>';
+            showResponse('authorsList', html);
+        } catch(e) { showResponse('authorsList', null, e.message); }
     }
 
-    // ------------------------- ADMINISTRADOR -------------------------
-    function renderAdminTab(tabId, container) {
-        if (tabId === 'users') {
-            container.innerHTML = `<div class="card"><h3>👥 Cadastrar Professor ou Bibliotecário</h3>
-                <label>Papel</label><select id="adminRole"><option value="professor">Professor</option><option value="librarian">Bibliotecário</option></select>
-                <label>Usuário</label><input id="adminUsername">
-                <label>Senha</label><input type="password" id="adminPassword">
-                <label>Nome</label><input id="adminName">
-                <label>Código da Turma (apenas para professor)</label><input id="adminClassroomCode">
-                <button onclick="registerUserByAdmin()">Cadastrar</button>
-                <div id="adminRegisterResponse" class="response"></div>
-                </div>
-                <div class="card"><h3>👥 Cadastrar Administrador</h3>
-                <label>Usuário</label><input id="adminUsername2">
-                <label>Senha</label><input type="password" id="adminPassword2">
-                <label>Nome</label><input id="adminName2">
-                <button onclick="registerAdministrator()">Cadastrar Admin</button>
-                <div id="adminRegisterResponse2" class="response"></div>
-                </div>`;
-        } else if (tabId === 'classrooms') {
-            container.innerHTML = `<div class="card"><h3>🏫 Criar Turma</h3>
-                <label>Nome da Turma</label><input id="className">
-                <button onclick="createClassroom()">Criar</button>
-                <div id="classroomResponse" class="response"></div>
-                </div>
-                <div class="card"><h3>📋 Listar Turmas</h3>
-                <button onclick="listAllClassrooms()">Carregar</button>
-                <div id="allClassroomsResponse" class="response"></div>
-                </div>`;
-        }
+    // ==================== ADMINISTRATOR ====================
+    function renderAdminUsersTab() {
+        const pane = $('#content-users');
+        pane.html(`
+            <div class="card p-3"><h4>👥 Register Professor or Librarian</h4><label>Role</label><select id="adminRole" class="form-select"><option value="professor">Professor</option><option value="librarian">Librarian</option></select><label>Username</label><input id="adminUsername" class="form-control"><label>Password</label><input type="password" id="adminPassword" class="form-control"><label>Name</label><input id="adminName" class="form-control"><label>Classroom Code (professor only)</label><input id="adminClassroomCode" class="form-control"><button class="btn btn-primary mt-2" id="registerUserBtn">Register</button><div id="adminRegisterResponse" class="response-area mt-2"></div></div>
+            <div class="card p-3 mt-3"><h4>👥 Register Administrator</h4><label>Username</label><input id="adminUsername2" class="form-control"><label>Password</label><input type="password" id="adminPassword2" class="form-control"><label>Name</label><input id="adminName2" class="form-control"><button class="btn btn-primary mt-2" id="registerAdminBtn">Register Admin</button><div id="adminRegisterResponse2" class="response-area mt-2"></div></div>
+        `);
+        $('#registerUserBtn').off('click').on('click', registerUserByAdmin);
+        $('#registerAdminBtn').off('click').on('click', registerAdministrator);
     }
     async function registerUserByAdmin() {
-        const role = document.getElementById('adminRole').value;
-        const username = document.getElementById('adminUsername').value;
-        const password = document.getElementById('adminPassword').value;
-        const name = document.getElementById('adminName').value;
-        const classroomCode = document.getElementById('adminClassroomCode').value;
+        const role = $('#adminRole').val(), username = $('#adminUsername').val(), password = $('#adminPassword').val(), name = $('#adminName').val(), classroomCode = $('#adminClassroomCode').val();
         const userData = { username, password, name };
         let url, body;
-        if (role === 'professor') {
-            url = '/api/professors/register';
-            body = { professor: userData, classroomCode };
-        } else {
-            url = '/api/librarians/register';
-            body = userData;
-        }
-        try { const data = await apiCall('POST', url, body); showResponse('adminRegisterResponse', data); }
+        if (role === 'professor') { url = '/api/professors/register'; body = { professor: userData, classroomCode }; }
+        else { url = '/api/librarians/register'; body = userData; }
+        try { await apiCall('POST', url, body); showResponse('adminRegisterResponse', '<span class="text-success">User registered!</span>'); }
         catch(e) { showResponse('adminRegisterResponse', null, e.message); }
     }
     async function registerAdministrator() {
-        const username = document.getElementById('adminUsername2').value;
-        const password = document.getElementById('adminPassword2').value;
-        const name = document.getElementById('adminName2').value;
-        try { const data = await apiCall('POST', '/api/administrators/register', { username, password, name }); showResponse('adminRegisterResponse2', data); }
+        const username = $('#adminUsername2').val(), password = $('#adminPassword2').val(), name = $('#adminName2').val();
+        try { await apiCall('POST', '/api/administrators/register', { username, password, name }); showResponse('adminRegisterResponse2', '<span class="text-success">Admin registered!</span>'); }
         catch(e) { showResponse('adminRegisterResponse2', null, e.message); }
     }
+
+    function renderAdminClassroomsTab() {
+        const pane = $('#content-classrooms');
+        pane.html(`
+            <div class="card p-3"><h4>🏫 Create Classroom</h4><label>Classroom Name</label><input id="className" class="form-control"><button class="btn btn-primary mt-2" id="createClassroomBtn">Create</button><div id="classroomResponse" class="response-area mt-2"></div></div>
+            <div class="card p-3 mt-3"><h4>📋 Classrooms</h4><div id="classroomsList" class="mt-2"></div></div>
+        `);
+        $('#createClassroomBtn').off('click').on('click', createClassroom);
+        loadClassrooms();
+    }
     async function createClassroom() {
-        const name = document.getElementById('className').value;
-        try { const data = await apiCall('POST', `/api/classrooms?name=${encodeURIComponent(name)}`); showResponse('classroomResponse', data); }
+        const name = $('#className').val();
+        if (!name) return;
+        try { await apiCall('POST', `/api/classrooms?name=${encodeURIComponent(name)}`); showResponse('classroomResponse', '<span class="text-success">Classroom created!</span>'); loadClassrooms(); }
         catch(e) { showResponse('classroomResponse', null, e.message); }
     }
-    async function listAllClassrooms() {
-        try { const data = await apiCall('GET', '/api/classrooms/'); showResponse('allClassroomsResponse', data); }
-        catch(e) { showResponse('allClassroomsResponse', null, e.message); }
+    async function loadClassrooms() {
+        try {
+            const data = await apiCall('GET', '/api/classrooms/');
+            let html = '<div class="list-group">';
+            data.data.forEach(c => {
+                html += `<div class="list-group-item"><div class="d-flex justify-content-between align-items-center"><strong>${escapeHtml(c.name)}</strong>
+                    <div>
+                        <button class="btn btn-sm btn-info show-users" data-id="${c.id}">Show Users</button>
+                        <button class="btn btn-sm btn-warning edit-classroom" data-id="${c.id}" data-name="${escapeHtml(c.name)}">Edit Name</button>
+                        <button class="btn btn-sm btn-danger delete-classroom" data-id="${c.id}">Delete</button>
+                        <button class="btn btn-sm btn-secondary copy-code" data-code="${c.publicCode}">Copy Code</button>
+                    </div></div>
+                    <div id="users-${c.id}" class="mt-2" style="display:none;"></div></div>`;
+            });
+            html += '</div>';
+            $('#classroomsList').html(html);
+            $('.show-users').off('click').on('click', function() { showClassroomUsers($(this).data('id')); });
+            $('.edit-classroom').off('click').on('click', function() { $('#editClassroomId').val($(this).data('id')); $('#newClassName').val($(this).data('name')); $('#editClassNameModal').modal('show'); });
+            $('.delete-classroom').off('click').on('click', function() { if(confirm('Delete this classroom?')) deleteClassroom($(this).data('id')); });
+            $('.copy-code').off('click').on('click', function() {
+                const code = $(this).data('code');
+                navigator.clipboard.writeText(code).then(() => notifySuccess('Classroom code copied to clipboard!'));
+            });
+            $('#confirmEditClassNameBtn').off('click').on('click', changeClassName);
+        } catch(e) { console.error(e); }
+    }
+    async function showClassroomUsers(id) {
+        const div = $(`#users-${id}`);
+        if (div.is(':visible')) { div.hide(); return; }
+        try {
+            const data = await apiCall('GET', `/api/classrooms/${id}`);
+            const classroom = data.data;
+            let html = '<strong>Users:</strong><ul>';
+            if (classroom.users && classroom.users.length) {
+                classroom.users.forEach(u => html += `<li>${escapeHtml(u.name || u.username)} (${u.is_professor ? 'Professor' : 'Student'}) | Active: ${u.active}${u.current_book ? ` | Reading: ${escapeHtml(u.current_book.title)}` : ''}</li>`);
+            } else html += '<li>No users.</li>';
+            html += '</ul><label>Replace users (comma IDs):</label><input type="text" id="userIdsInput-${id}" class="form-control form-control-sm"><button class="btn btn-sm btn-warning mt-1 replace-users" data-id="${id}">Replace</button>';
+            div.html(html).show();
+            $(`.replace-users[data-id="${id}"]`).off('click').on('click', function() { modifyUsersInClassroom(id); });
+        } catch(e) { notifyError('Error loading users: ' + e.message); }
+    }
+    async function modifyUsersInClassroom(id) {
+        const idsStr = $(`#userIdsInput-${id}`).val();
+        if (!idsStr) { notifyWarning('Enter user IDs'); return; }
+        const userIds = idsStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        try {
+            await apiCall('PUT', `/api/classrooms/${id}/users`, { userIds });
+            notifySuccess('Users updated');
+            $(`#users-${id}`).hide();
+        } catch(e) { notifyError('Error: ' + e.message); }
+    }
+    async function changeClassName() {
+        const id = $('#editClassroomId').val(), newName = $('#newClassName').val();
+        if (!id || !newName) return;
+        try { await apiCall('PATCH', `/api/classrooms/${id}/name`, { name: newName }); $('#editClassNameModal').modal('hide'); loadClassrooms(); }
+        catch(e) { notifyError('Error: ' + e.message); }
+    }
+    async function deleteClassroom(id) {
+        try { await apiCall('DELETE', `/api/classrooms/${id}`); loadClassrooms(); }
+        catch(e) { notifyError('Error: ' + e.message); }
     }
 
-    // Expor funções globalmente
-    window.login = login;
-    window.showRegistration = showRegistration;
-    window.nextStep = nextStep;
-    window.prevStep = prevStep;
-    window.submitRegistration = submitRegistration;
-    window.fetchStudentStats = fetchStudentStats;
-    window.updateStreak = updateStreak;
-    window.searchBooks = searchBooks;
-    window.startReading = startReading;
-    window.updateReadingPage = updateReadingPage;
-    window.finishReading = finishReading;
-    window.rateBook = rateBook;
-    window.createGroup = createGroup;
-    window.fetchMyGroups = fetchMyGroups;
-    window.addBookToGroup = addBookToGroup;
-    window.fetchMySummaries = fetchMySummaries;
-    window.fetchReadingHistory = fetchReadingHistory;
-    window.fetchAllStudents = fetchAllStudents;
-    window.fetchSummariesByBook = fetchSummariesByBook;
-    window.fetchStudentStatsById = fetchStudentStatsById;
-    window.addBookByLibrarian = addBookByLibrarian;
-    window.updateBookAvailability = updateBookAvailability;
-    window.listAllBooks = listAllBooks;
-    window.addAuthor = addAuthor;
-    window.listAuthors = listAuthors;
-    window.registerUserByAdmin = registerUserByAdmin;
-    window.registerAdministrator = registerAdministrator;
-    window.createClassroom = createClassroom;
-    window.listAllClassrooms = listAllClassrooms;
+    // Event bindings for modals
+    $('#confirmFinishBtn').on('click', finishReadingFromModal);
+    $('#confirmAddBookToGroup').on('click', confirmAddBookToGroup);
+    $('#confirmAddBookToGroupFromBook').on('click', confirmAddBookToGroupFromBook);
+
+    $(function() {
+        $('#loginBtn').on('click', login);
+        $('#showRegisterBtn').on('click', showRegistration);
+    });
 </script>
+
+<div class="modal fade" id="appMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="appMessageHeader">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="popup-icon info" id="appMessageIcon">i</div>
+                    <div>
+                        <h5 class="modal-title mb-0" id="appMessageTitle">Message</h5>
+                        <small class="text-muted" id="appMessageSubtitle">Notification</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" aria-label="Close" id="appMessageCloseBtn" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="appMessageBody" class="fs-6"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="appMessageOkBtn" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
