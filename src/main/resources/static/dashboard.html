@@ -640,7 +640,7 @@
         try {
             const data = await apiCall('GET', `/api/read-history/student/${userId}`);
             let html = '<table class="table table-sm"><thead><tr><th>Book</th><th>Last Page</th><th>Last Update</th></tr></thead><tbody>';
-            data.data.forEach(h => html += `<tr><td>${escapeHtml(h.book.title)}</td><td>${h.last_page_read}</td><td>${h.last_update}</td></tr>`);
+            data.data.forEach(h => html += `<tr><td>${escapeHtml(h.book.title)}</td><td>${h.last_page_read}</td><td>${h.last_update}<tr></tr>`);
             html += '</tbody></table>';
             showResponse('historyResponse', html);
         } catch(e) { showResponse('historyResponse', null, e.message); }
@@ -786,20 +786,33 @@
         catch(e) { showResponse('adminRegisterResponse2', null, e.message); }
     }
 
+    // UPDATED: renderAdminClassroomsTab adapted to ClassroomResponse DTO (no users)
     function renderAdminClassroomsTab() {
         const pane = $('#content-classrooms');
         pane.html(`
             <div class="card p-3"><h4>🏫 Create Classroom</h4><label>Classroom Name</label><input id="className" class="form-control"><button class="btn btn-primary mt-2" id="createClassroomBtn">Create</button><div id="classroomResponse" class="response-area mt-2"></div></div>
             <div class="card p-3 mt-3"><h4>📋 Classrooms</h4><div id="classroomsList" class="mt-2"></div></div>
+            <div class="card p-3 mt-3"><h4>👥 Manage Classroom Users</h4><p class="text-muted">Enter comma-separated user IDs to replace the classroom's users. (Current user list is not available in this version.)</p>
+                <label>Classroom ID</label><input type="number" id="classroomIdForUsers" class="form-control">
+                <label>User IDs (comma separated)</label><input type="text" id="userIdsForClassroom" class="form-control" placeholder="e.g., 1,2,3">
+                <button class="btn btn-primary mt-2" id="replaceUsersBtn">Replace Users</button>
+                <div id="replaceUsersResponse" class="response-area mt-2"></div>
+            </div>
         `);
         $('#createClassroomBtn').off('click').on('click', createClassroom);
+        $('#replaceUsersBtn').off('click').on('click', replaceUsersInClassroom);
         loadClassrooms();
     }
-    async function createClassroom() {
-        const name = $('#className').val();
-        if (!name) return;
-        try { await apiCall('POST', `/api/classrooms?name=${encodeURIComponent(name)}`); showResponse('classroomResponse', '<span class="text-success">Classroom created!</span>'); loadClassrooms(); }
-        catch(e) { showResponse('classroomResponse', null, e.message); }
+    async function replaceUsersInClassroom() {
+        const id = $('#classroomIdForUsers').val();
+        const idsStr = $('#userIdsForClassroom').val();
+        if (!id || !idsStr) { notifyWarning('Enter Classroom ID and User IDs'); return; }
+        const userIds = idsStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+        try {
+            await apiCall('PUT', `/api/classrooms/${id}/users`, { userIds });
+            notifySuccess('Users replaced successfully!');
+            $('#replaceUsersResponse').html('<span class="text-success">Users updated.</span>');
+        } catch(e) { notifyError('Error: ' + e.message); }
     }
     async function loadClassrooms() {
         try {
@@ -808,49 +821,28 @@
             data.data.forEach(c => {
                 html += `<div class="list-group-item"><div class="d-flex justify-content-between align-items-center"><strong>${escapeHtml(c.name)}</strong>
                     <div>
-                        <button class="btn btn-sm btn-info show-users" data-id="${c.id}">Show Users</button>
                         <button class="btn btn-sm btn-warning edit-classroom" data-id="${c.id}" data-name="${escapeHtml(c.name)}">Edit Name</button>
                         <button class="btn btn-sm btn-danger delete-classroom" data-id="${c.id}">Delete</button>
                         <button class="btn btn-sm btn-secondary copy-code" data-code="${c.publicCode}">Copy Code</button>
                     </div></div>
-                    <div id="users-${c.id}" class="mt-2" style="display:none;"></div></div>`;
+                </div>`;
             });
             html += '</div>';
             $('#classroomsList').html(html);
-            $('.show-users').off('click').on('click', function() { showClassroomUsers($(this).data('id')); });
-            $('.edit-classroom').off('click').on('click', function() { $('#editClassroomId').val($(this).data('id')); $('#newClassName').val($(this).data('name')); $('#editClassNameModal').modal('show'); });
-            $('.delete-classroom').off('click').on('click', function() { if(confirm('Delete this classroom?')) deleteClassroom($(this).data('id')); });
+            $('.edit-classroom').off('click').on('click', function() {
+                $('#editClassroomId').val($(this).data('id'));
+                $('#newClassName').val($(this).data('name'));
+                $('#editClassNameModal').modal('show');
+            });
+            $('.delete-classroom').off('click').on('click', function() {
+                if(confirm('Delete this classroom?')) deleteClassroom($(this).data('id'));
+            });
             $('.copy-code').off('click').on('click', function() {
                 const code = $(this).data('code');
                 navigator.clipboard.writeText(code).then(() => notifySuccess('Classroom code copied to clipboard!'));
             });
             $('#confirmEditClassNameBtn').off('click').on('click', changeClassName);
         } catch(e) { console.error(e); }
-    }
-    async function showClassroomUsers(id) {
-        const div = $(`#users-${id}`);
-        if (div.is(':visible')) { div.hide(); return; }
-        try {
-            const data = await apiCall('GET', `/api/classrooms/${id}`);
-            const classroom = data.data;
-            let html = '<strong>Users:</strong><ul>';
-            if (classroom.users && classroom.users.length) {
-                classroom.users.forEach(u => html += `<li>${escapeHtml(u.name || u.username)} (${u.is_professor ? 'Professor' : 'Student'}) | Active: ${u.active}${u.current_book ? ` | Reading: ${escapeHtml(u.current_book.title)}` : ''}</li>`);
-            } else html += '<li>No users.</li>';
-            html += '</ul><label>Replace users (comma IDs):</label><input type="text" id="userIdsInput-${id}" class="form-control form-control-sm"><button class="btn btn-sm btn-warning mt-1 replace-users" data-id="${id}">Replace</button>';
-            div.html(html).show();
-            $(`.replace-users[data-id="${id}"]`).off('click').on('click', function() { modifyUsersInClassroom(id); });
-        } catch(e) { notifyError('Error loading users: ' + e.message); }
-    }
-    async function modifyUsersInClassroom(id) {
-        const idsStr = $(`#userIdsInput-${id}`).val();
-        if (!idsStr) { notifyWarning('Enter user IDs'); return; }
-        const userIds = idsStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-        try {
-            await apiCall('PUT', `/api/classrooms/${id}/users`, { userIds });
-            notifySuccess('Users updated');
-            $(`#users-${id}`).hide();
-        } catch(e) { notifyError('Error: ' + e.message); }
     }
     async function changeClassName() {
         const id = $('#editClassroomId').val(), newName = $('#newClassName').val();
@@ -861,6 +853,12 @@
     async function deleteClassroom(id) {
         try { await apiCall('DELETE', `/api/classrooms/${id}`); loadClassrooms(); }
         catch(e) { notifyError('Error: ' + e.message); }
+    }
+    async function createClassroom() {
+        const name = $('#className').val();
+        if (!name) return;
+        try { await apiCall('POST', `/api/classrooms?name=${encodeURIComponent(name)}`); showResponse('classroomResponse', '<span class="text-success">Classroom created!</span>'); loadClassrooms(); }
+        catch(e) { showResponse('classroomResponse', null, e.message); }
     }
 
     // Event bindings for modals

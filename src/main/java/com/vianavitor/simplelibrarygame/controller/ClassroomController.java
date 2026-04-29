@@ -3,6 +3,7 @@ package com.vianavitor.simplelibrarygame.controller;
 import com.vianavitor.simplelibrarygame.dto.ApiResponse;
 import com.vianavitor.simplelibrarygame.dto.request.ChangeNameRequest;
 import com.vianavitor.simplelibrarygame.dto.request.ModifyUsersInClassroomRequest;
+import com.vianavitor.simplelibrarygame.dto.response.ClassroomResponse;
 import com.vianavitor.simplelibrarygame.dto.response.UserInClassroomResponse;
 import com.vianavitor.simplelibrarygame.model.BookReadHistory;
 import com.vianavitor.simplelibrarygame.model.Classroom;
@@ -17,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,19 +36,23 @@ public class ClassroomController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<ApiResponse<List<Classroom>>> getAll(
+    public ResponseEntity<ApiResponse<List<ClassroomResponse>>> getAll(
             HttpServletRequest req
     ) {
-        List<Classroom> result = classroomService.getAllClasses();
+        List<ClassroomResponse> result = classroomService.getAllClasses()
+                .stream()
+                .map(this::classroomToDto)
+                .toList();
+
         return ResponseEntity.ok(ApiResponse.success(result, "Result of searching all classrooms", req.getRequestURI()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Classroom>> getById(
+    public ResponseEntity<ApiResponse<ClassroomResponse>> getById(
             @PathVariable Long id,
             HttpServletRequest req
     ) {
-        Classroom result = classroomService.getClassroom(id);
+        ClassroomResponse result = this.classroomToDto(classroomService.getClassroom(id));
         return ResponseEntity.ok(ApiResponse.success(result, "Result of searching by ID", req.getRequestURI()));
     }
 
@@ -67,12 +71,12 @@ public class ClassroomController {
     }
 
     @PatchMapping("/{id}/name")
-    public ResponseEntity<ApiResponse<Classroom>> changeName(
+    public ResponseEntity<ApiResponse<ClassroomResponse>> changeName(
             @PathVariable Long id,
             @Valid @RequestBody ChangeNameRequest request,
             HttpServletRequest req
     ) {
-        Classroom classroom = classroomService.changeName(id, request.name());
+        ClassroomResponse classroom = this.classroomToDto(classroomService.changeName(id, request.name()));
         return ResponseEntity.ok(ApiResponse.success(classroom, "Name changed", req.getRequestURI()));
     }
 
@@ -101,6 +105,14 @@ public class ClassroomController {
         return new UserInClassroomResponse(
                 user.getId(), user.getName(), user.getUsername(), user.getLastLogin(),
                 null, true, user.isActive()
+        );
+    }
+
+    private ClassroomResponse classroomToDto(Classroom classroom) {
+        return new ClassroomResponse(
+                classroom.getId(),
+                classroom.getName(),
+                classroom.getPublicCode()
         );
     }
 }
