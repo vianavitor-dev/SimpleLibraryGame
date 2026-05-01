@@ -4,6 +4,7 @@ import com.vianavitor.simplelibrarygame.dto.ApiResponse;
 import com.vianavitor.simplelibrarygame.dto.request.ChangeNameRequest;
 import com.vianavitor.simplelibrarygame.dto.request.ModifyUsersInClassroomRequest;
 import com.vianavitor.simplelibrarygame.dto.response.ClassroomResponse;
+import com.vianavitor.simplelibrarygame.dto.response.ClassroomWithUsersResponse;
 import com.vianavitor.simplelibrarygame.dto.response.UserInClassroomResponse;
 import com.vianavitor.simplelibrarygame.model.BookReadHistory;
 import com.vianavitor.simplelibrarygame.model.Classroom;
@@ -69,11 +70,14 @@ public class ClassroomController {
     }
 
     @GetMapping("/professor/{id}")
-    public ResponseEntity<ApiResponse<Set<Classroom>>> getByProfessor(
+    public ResponseEntity<ApiResponse<Set<ClassroomWithUsersResponse>>> getByProfessor(
             @PathVariable Long id,
             HttpServletRequest req
     ) {
-        Set<Classroom> results = classroomService.getByProfessor(id);
+        Set<ClassroomWithUsersResponse> results = classroomService.getByProfessor(id)
+                .stream()
+                .map(this::classroomToDtoWithUsers)
+                .collect(Collectors.toSet());
         return ResponseEntity.ok(ApiResponse.success(results, "Result of searching by professor ID", req.getRequestURI()));
     }
 
@@ -106,6 +110,24 @@ public class ClassroomController {
         classroomService.delete(id);
         ApiResponse<Void> response = ApiResponse.success(null, "Classroom deleted", request.getRequestURI());
         return ResponseEntity.ok(response);
+    }
+
+    private ClassroomWithUsersResponse classroomToDtoWithUsers(Classroom classroom) {
+        Set<UserInClassroomResponse> users = null;
+
+        if (classroom.getUsersInClassroom() != null) {
+            users = classroom.getUsersInClassroom()
+                    .stream()
+                    .map(this::userClassroomToDtoResp)
+                    .collect(Collectors.toSet());
+        }
+
+        return new ClassroomWithUsersResponse(
+                classroom.getId(),
+                classroom.getName(),
+                classroom.getPublicCode(),
+                users
+        );
     }
 
     private UserInClassroomResponse userClassroomToDtoResp(UserClassroom user) {
