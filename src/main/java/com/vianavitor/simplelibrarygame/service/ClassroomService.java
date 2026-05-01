@@ -85,6 +85,20 @@ public class ClassroomService {
         return repository.save(classroom).getUsersInClassroom();
     }
 
+    public Set<UserClassroom> getUsersInClassroom(Long id) throws ResourceNotFoundException, IllegalArgumentException {
+        Classroom classroom = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));
+
+        return classroom.getUsersInClassroom();
+    }
+
+    public Set<Classroom> getByProfessor(Long professorId) throws ResourceNotFoundException {
+        Professor professor = professorRepository.findById(professorId)
+                .orElseThrow(() -> new ResourceNotFoundException("professor not found"));
+
+        return professor.getClassrooms();
+    }
+
     public Classroom changeName(Long id, String name) throws ResourceNotFoundException, DuplicateResourceException {
         Classroom classroom = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("classroom not found"));

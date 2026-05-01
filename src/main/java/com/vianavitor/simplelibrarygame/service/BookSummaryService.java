@@ -4,9 +4,11 @@ import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import com.vianavitor.simplelibrarygame.model.Book;
 import com.vianavitor.simplelibrarygame.model.BookSummary;
 import com.vianavitor.simplelibrarygame.model.Student;
+import com.vianavitor.simplelibrarygame.model.StudentStats;
 import com.vianavitor.simplelibrarygame.repository.BookRepository;
 import com.vianavitor.simplelibrarygame.repository.BookSummaryRepository;
 import com.vianavitor.simplelibrarygame.repository.StudentRepository;
+import com.vianavitor.simplelibrarygame.repository.StudentStatsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,9 @@ public class BookSummaryService {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Autowired
+    private StudentStatsService studentStatsService;
+
     public void submit(String text, Long bookId, Long studentId) throws ResourceNotFoundException {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("not found book"));
@@ -36,7 +41,8 @@ public class BookSummaryService {
         summary.setBook(book);
         summary.setStudent(student);
         summary.setText(text);
-        summary.setWrittenAt(LocalDate.now());
+
+        studentStatsService.setOngoingSteak(studentId);
 
         repository.save(summary);
     }

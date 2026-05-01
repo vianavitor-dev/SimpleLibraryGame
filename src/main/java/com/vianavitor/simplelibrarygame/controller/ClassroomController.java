@@ -56,6 +56,27 @@ public class ClassroomController {
         return ResponseEntity.ok(ApiResponse.success(result, "Result of searching by ID", req.getRequestURI()));
     }
 
+    @GetMapping("/{id}/users")
+    public ResponseEntity<ApiResponse<Set<UserInClassroomResponse>>> getUsersInClassroom(
+            @PathVariable Long id,
+            HttpServletRequest req
+    ) {
+        Set<UserInClassroomResponse> results = classroomService.getUsersInClassroom(id)
+                .stream()
+                .map(this::userClassroomToDtoResp)
+                .collect(Collectors.toSet());
+        return ResponseEntity.ok(ApiResponse.success(results, "Result of searching by ID", req.getRequestURI()));
+    }
+
+    @GetMapping("/professor/{id}")
+    public ResponseEntity<ApiResponse<Set<Classroom>>> getByProfessor(
+            @PathVariable Long id,
+            HttpServletRequest req
+    ) {
+        Set<Classroom> results = classroomService.getByProfessor(id);
+        return ResponseEntity.ok(ApiResponse.success(results, "Result of searching by professor ID", req.getRequestURI()));
+    }
+
     @PutMapping("/{id}/users")
     public ResponseEntity<ApiResponse<Set<UserInClassroomResponse>>> modifyUsers(
             @PathVariable Long id,
@@ -90,13 +111,16 @@ public class ClassroomController {
     private UserInClassroomResponse userClassroomToDtoResp(UserClassroom user) {
         if (user instanceof Student) {
             BookReadHistory history = ((Student) user).getStats().getCurrentBook();
-
+            UserInClassroomResponse.CurrentBookInfo bookInfo = null;
+            if (history != null) {
+                bookInfo = new UserInClassroomResponse.CurrentBookInfo(
+                        history.getId(),
+                        history.getBook().getTitle()
+                );
+            }
             return new UserInClassroomResponse(
                     user.getId(), user.getName(), user.getUsername(), user.getLastLogin(),
-                    new UserInClassroomResponse.CurrentBookInfo(
-                            history.getId(),
-                            history.getBook().getTitle()
-                    ),
+                    bookInfo,
                     false,
                     user.isActive()
             );

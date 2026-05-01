@@ -132,6 +132,16 @@
     </div>
 </div>
 
+<!-- Modal for showing classroom users (admin) -->
+<div class="modal fade" id="classroomUsersModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Classroom Users</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="classroomUsersBody"></div>
+        </div>
+    </div>
+</div>
+
 <script>
     // ==================== GLOBALS ====================
     let authToken = null;
@@ -640,27 +650,148 @@
         try {
             const data = await apiCall('GET', `/api/read-history/student/${userId}`);
             let html = '<table class="table table-sm"><thead><tr><th>Book</th><th>Last Page</th><th>Last Update</th></tr></thead><tbody>';
-            data.data.forEach(h => html += `<tr><td>${escapeHtml(h.book.title)}</td><td>${h.last_page_read}</td><td>${h.last_update}<tr></tr>`);
-            html += '</tbody></table>';
+            data.data.forEach(h => html += `<tr><td>${escapeHtml(h.book.title)}</td> <td>${h.last_page_read}</td> <td>${h.last_update}</td> </tr>`);
+            html += '</tbody> </table>';
             showResponse('historyResponse', html);
         } catch(e) { showResponse('historyResponse', null, e.message); }
     }
 
     // ==================== PROFESSOR ====================
-    function renderStudentsTab() {
+    // Updated to use /api/classrooms/professor/{userId}
+    async function renderStudentsTab() {
         const pane = $('#content-students');
-        pane.html(`<div class="card p-3"><h4>Students</h4><button class="btn btn-secondary mb-2" id="loadAllStudentsBtn">Load</button><div id="studentsList" class="response-area"></div></div>`);
-        $('#loadAllStudentsBtn').off('click').on('click', fetchAllStudents);
+        pane.html(`
+            <div class="card p-3">
+                <h4><i class="bi bi-people"></i> My Classrooms and Students</h4>
+                <p class="text-muted">Your classrooms and the students enrolled in each.</p>
+                <button class="btn btn-secondary mb-3" id="refreshClassroomsBtn">Refresh</button>
+                <div id="studentsList" class="accordion" id="classroomsAccordion"></div>
+            </div>
+        `);
+        $('#refreshClassroomsBtn').off('click').on('click', () => loadProfessorClassroomsAndStudents());
+        await loadProfessorClassroomsAndStudents();
     }
-    async function fetchAllStudents() {
+
+    async function loadProfessorClassroomsAndStudents() {
         try {
-            const data = await apiCall('GET', '/api/students');
-            let html = '<ul class="list-group">';
-            data.data.forEach(s => html += `<li class="list-group-item">${escapeHtml(s.name || s.username)}</li>`);
-            html += '</ul>';
-            showResponse('studentsList', html);
-        } catch(e) { showResponse('studentsList', null, e.message); }
+            const response = await apiCall('GET', `/api/classrooms/professor/${userId}`);
+            const classrooms = response.data; // array of classrooms
+            const container = $('#studentsList').empty();
+
+            if (!classrooms || classrooms.length === 0) {
+                container.html('<div class="alert alert-info">You are not assigned to any classroom.</div>');
+                return;
+            }
+
+            for (let i = 0; i < classrooms.length; i++) {
+                const classroom = classrooms[i];
+                const users = classroom.usersInClassroom || [];
+                // Filter out the professor (current user) and keep only users with 'stats' (students)
+                const students = users.filter(u => u.id !== userId && u.stats !== undefined);
+                const collapseId = `collapse-${classroom.id}`;
+                const headingId = `heading-${classroom.id}`;
+
+                const classroomCard = $(`
+                    <div class="card mb-3">
+                        <div class="card-header" id="${headingId}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">📖 ${escapeHtml(classroom.name)}</h5>
+                                <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
+                                    Show/Hide Students
+                                </button>
+                            </div>
+                        </div>
+                        <div id="${collapseId}" class="collapse" aria-labelledby="${headingId}" data-bs-parent="#classroomsAccordion">
+                            <div class="card-body">
+                                <div class="row" id="students-row-${classroom.id}"></div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                const studentsRow = classroomCard.find(`#students-row-${classroom.id}`);
+
+                if (students.length === 0) {
+                    studentsRow.html('<div class="col-12 text-muted">No students enrolled in this classroom.</div>');
+                } else {
+                    for (const student of students) {
+                        // Get current book from stats
+                        let currentBook = 'Not reading';
+                        if (student.stats && student.stats.currentBook && student.stats.currentBook.book) {
+                            currentBook = student.stats.currentBook.book.title;
+                        } else if (student.stats && student.stats.currentBook && student.stats.currentBook.title) {
+                            currentBook = student.stats.currentBook.title;
+                        }
+                        const lastLogin = student.lastLogin || 'Never';
+                        const studentCard = $(`
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${escapeHtml(student.name || student.username)}</h5>
+                                        <p class="card-text">
+                                            <strong>Last login:</strong> ${escapeHtml(lastLogin)}<br>
+                                            <strong>Current book:</strong> ${escapeHtml(currentBook)}
+                                        </p>
+                                        <button class="btn btn-sm btn-info view-summary-btn"
+                                                data-student-id="${student.id}"
+                                                data-student-name="${escapeHtml(student.name || student.username)}">
+                                            View Last Summary
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                        studentsRow.append(studentCard);
+                    }
+                }
+                container.append(classroomCard);
+            }
+
+            // Attach summary button handlers after all cards are built
+            $('.view-summary-btn').off('click').on('click', async function() {
+                const studentId = $(this).data('student-id');
+                const studentName = $(this).data('student-name');
+                await showLastSummaryForStudent(studentId, studentName);
+            });
+
+        } catch(e) {
+            showResponse('studentsList', null, e.message);
+        }
     }
+
+    async function showLastSummaryForStudent(studentId, studentName) {
+        try {
+            const summariesData = await apiCall('GET', `/api/summaries/student/${studentId}`);
+            const summaries = summariesData.data || [];
+            if (summaries.length === 0) {
+                notifyInfo(`No summaries found for ${studentName}.`);
+                return;
+            }
+            const latest = summaries.sort((a,b) => new Date(b.written_at) - new Date(a.written_at))[0];
+            const modalContent = `
+                <strong>Book:</strong> ${escapeHtml(latest.book.title)}<br>
+                <strong>Written at:</strong> ${escapeHtml(latest.written_at)}<br>
+                <strong>Summary:</strong><br>${escapeHtml(latest.text)}
+            `;
+            if (!$('#summaryModal').length) {
+                $('body').append(`
+                    <div class="modal fade" id="summaryModal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header"><h5 class="modal-title">Last Summary</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                                <div class="modal-body"></div>
+                                <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+            $('#summaryModal .modal-body').html(modalContent);
+            $('#summaryModal').modal('show');
+        } catch(e) {
+            notifyError('Failed to load summary: ' + e.message);
+        }
+    }
+
     function renderProfSummariesTab() {
         const pane = $('#content-summaries');
         pane.html(`<div class="card p-3"><h4>Summaries by Book</h4><label>Book ID</label><input type="number" id="profBookId" class="form-control"><button class="btn btn-primary mt-2" id="profLoadSummariesBtn">Load</button><div id="profSummaries" class="response-area mt-2"></div></div>`);
@@ -726,8 +857,13 @@
         } catch(e) { console.error(e); }
     }
     async function updateBookAvailability(id, available) {
-        try { await apiCall('PATCH', `/api/books/${id}/available?available=${available}`); showResponse('availabilityResponse', '<span class="text-success">Availability updated!</span>'); loadBooksForAvailability(); }
-        catch(e) { showResponse('availabilityResponse', null, e.message); }
+        try {
+            await apiCall('PATCH', `/api/books/${id}/available?available=${available}`);
+            showResponse('availabilityResponse', '<span class="text-success">Availability updated!</span>');
+            loadBooksForAvailability();
+        } catch(e) {
+            showResponse('availabilityResponse', null, e.message);
+        }
     }
     async function listAllBooks() {
         try {
@@ -786,13 +922,12 @@
         catch(e) { showResponse('adminRegisterResponse2', null, e.message); }
     }
 
-    // UPDATED: renderAdminClassroomsTab adapted to ClassroomResponse DTO (no users)
     function renderAdminClassroomsTab() {
         const pane = $('#content-classrooms');
         pane.html(`
             <div class="card p-3"><h4>🏫 Create Classroom</h4><label>Classroom Name</label><input id="className" class="form-control"><button class="btn btn-primary mt-2" id="createClassroomBtn">Create</button><div id="classroomResponse" class="response-area mt-2"></div></div>
             <div class="card p-3 mt-3"><h4>📋 Classrooms</h4><div id="classroomsList" class="mt-2"></div></div>
-            <div class="card p-3 mt-3"><h4>👥 Manage Classroom Users</h4><p class="text-muted">Enter comma-separated user IDs to replace the classroom's users. (Current user list is not available in this version.)</p>
+            <div class="card p-3 mt-3"><h4>👥 Manage Classroom Users</h4><p class="text-muted">Enter comma-separated user IDs to replace the classroom's users.</p>
                 <label>Classroom ID</label><input type="number" id="classroomIdForUsers" class="form-control">
                 <label>User IDs (comma separated)</label><input type="text" id="userIdsForClassroom" class="form-control" placeholder="e.g., 1,2,3">
                 <button class="btn btn-primary mt-2" id="replaceUsersBtn">Replace Users</button>
@@ -821,6 +956,7 @@
             data.data.forEach(c => {
                 html += `<div class="list-group-item"><div class="d-flex justify-content-between align-items-center"><strong>${escapeHtml(c.name)}</strong>
                     <div>
+                        <button class="btn btn-sm btn-info show-users" data-id="${c.id}" data-name="${escapeHtml(c.name)}">Show Users</button>
                         <button class="btn btn-sm btn-warning edit-classroom" data-id="${c.id}" data-name="${escapeHtml(c.name)}">Edit Name</button>
                         <button class="btn btn-sm btn-danger delete-classroom" data-id="${c.id}">Delete</button>
                         <button class="btn btn-sm btn-secondary copy-code" data-code="${c.publicCode}">Copy Code</button>
@@ -829,6 +965,11 @@
             });
             html += '</div>';
             $('#classroomsList').html(html);
+            $('.show-users').off('click').on('click', async function() {
+                const id = $(this).data('id');
+                const name = $(this).data('name');
+                await showClassroomUsers(id, name);
+            });
             $('.edit-classroom').off('click').on('click', function() {
                 $('#editClassroomId').val($(this).data('id'));
                 $('#newClassName').val($(this).data('name'));
@@ -843,6 +984,32 @@
             });
             $('#confirmEditClassNameBtn').off('click').on('click', changeClassName);
         } catch(e) { console.error(e); }
+    }
+    async function showClassroomUsers(id, name) {
+        try {
+            const data = await apiCall('GET', `/api/classrooms/${id}/users`);
+            const users = data.data || [];
+            let html = `<h5>Classroom: ${escapeHtml(name)}</h5><div class="list-group">`;
+            if (users.length === 0) {
+                html += '<p>No users in this classroom.</p>';
+            } else {
+                users.forEach(u => {
+                    html += `<div class="list-group-item">
+                        <strong>${escapeHtml(u.name || u.username)}</strong><br>
+                        Role: ${u.isProfessor ? 'Professor' : 'Student'}<br>
+                        Username: ${escapeHtml(u.username)}<br>
+                        Last login: ${escapeHtml(u.lastLogin || 'Never')}<br>
+                        Active: ${u.active ? 'Yes' : 'No'}<br>
+                        ${u.currentBook ? `Current book: ${escapeHtml(u.currentBook.title)}` : ''}
+                    </div>`;
+                });
+            }
+            html += '</div>';
+            $('#classroomUsersBody').html(html);
+            $('#classroomUsersModal').modal('show');
+        } catch(e) {
+            notifyError('Failed to load users: ' + e.message);
+        }
     }
     async function changeClassName() {
         const id = $('#editClassroomId').val(), newName = $('#newClassName').val();
