@@ -19,6 +19,7 @@ public class BookSummary {
     @JoinColumn(name = "book_id")
     private Book book;
 
+    @Column(columnDefinition = "text")
     private String text;
 
     @Column(columnDefinition = "date not null default (current_date())")
