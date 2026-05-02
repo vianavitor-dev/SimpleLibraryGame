@@ -1,0 +1,42 @@
+services:
+  web:
+    image: vianavitor/slibrarygm-app:latest
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - app-net
+    volumes:
+      - /home/shared/slibrarygm-books:/app/uploads
+    environment:
+      - DATABASE_URL=jdbc:mysql://database:3306/slibrarygm
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=123
+      - BOOK_IMAGE_PATH=/app/uploads/books_cover
+
+  database:
+    image: mysql:oraclelinux9
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: slibrarygm
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: always
+    networks:
+      - app-net
+    volumes:
+      - db-volume:/var/lib/mysql
+
+networks:
+  app-net:
+
+volumes:
+  db-volume:
