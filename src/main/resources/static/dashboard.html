@@ -152,6 +152,7 @@
     let readingActive = false;
     let currentReadingBookId = null;
     let currentReadingBookTitle = null;
+    let lastCreatedBookId = null; // librarian: stores the ID of the last created book for image upload
     const popupTitles = {
         success: 'Success',
         warning: 'Attention',
@@ -185,6 +186,14 @@
     function notifyWarning(message, title = 'Attention') { showPopup('warning', message, title); }
     function notifyError(message, title = 'Error') { showPopup('danger', message, title); }
     function notifyInfo(message, title = 'Message') { showPopup('info', message, title); }
+
+    // Helper: build image URL using the image render endpoint
+    function getBookImageUrl(imagePath) {
+        if (!imagePath || imagePath.trim() === '') {
+            return 'https://via.placeholder.com/200x300?text=No+Cover';
+        }
+        return `/api/image-render/path?path=${encodeURIComponent(imagePath)}`;
+    }
 
     // Helper functions
     function decodeToken(token) {
@@ -406,10 +415,11 @@
                 const avgRating = book.ratingValue ? book.ratingValue.toFixed(1) : '0.0';
                 const stars = '★'.repeat(Math.floor(book.ratingValue)) + '☆'.repeat(5 - Math.floor(book.ratingValue));
                 const available = book.available && book.quantity > 0;
+                const imageSrc = getBookImageUrl(book.imagePath);
                 const card = $(`
                     <div class="col-md-4 col-lg-3">
                         <div class="card book-card h-100">
-                            <img src="${book.imagePath || 'https://via.placeholder.com/200x300?text=No+Cover'}" class="card-img-top book-cover" alt="Cover">
+                            <img src="${imageSrc}" class="card-img-top book-cover" alt="Cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x300?text=No+Cover';">
                             <div class="card-body">
                                 <h5 class="card-title">${escapeHtml(book.title)}</h5>
                                 <p class="card-text"><small class="text-muted">By ${book.bookAuthors.map(a=>a.name).join(', ')}</small></p>
@@ -434,11 +444,12 @@
         const authors = book.bookAuthors.map(a=>a.name).join(', ');
         const genres = book.bookGenres.map(g=>g.name).join(', ');
         const available = book.available && book.quantity > 0;
+        const imageSrc = getBookImageUrl(book.imagePath);
         $('#bookDetailTitle').text(book.title);
         $('#bookDetailBody').html(`
             <div class="row">
                 <div class="col-md-4">
-                    <img src="${book.imagePath || 'https://via.placeholder.com/200x300?text=No+Cover'}" class="img-fluid rounded" alt="Cover">
+                    <img src="${imageSrc}" class="img-fluid rounded" alt="Cover" onerror="this.onerror=null;this.src='https://via.placeholder.com/200x300?text=No+Cover';">
                 </div>
                 <div class="col-md-8">
                     <p><strong>Author(s):</strong> ${authors}</p>
@@ -499,7 +510,6 @@
         }
         // Add to group from book detail
         $('#addBookToGroupFromBookBtn').off('click').on('click', async () => {
-            // Load groups and show modal
             try {
                 const groupsData = await apiCall('GET', `/api/groups/student/${userId}`);
                 const groups = groupsData.data || [];
@@ -584,7 +594,6 @@
             $('.add-book-to-group-btn').off('click').on('click', async function() {
                 const groupId = $(this).data('id');
                 const groupName = $(this).data('name');
-                // Load books and show modal
                 try {
                     const booksData = await apiCall('GET', '/api/books/');
                     const books = booksData.data || [];
@@ -602,7 +611,6 @@
         } catch(e) { showResponse('groupsList', null, e.message); }
     }
 
-    // Confirm add book to group (from group modal)
     async function confirmAddBookToGroup() {
         const groupId = $('#addBookGroupId').val();
         const bookId = $('#addBookSelect').val();
@@ -614,7 +622,6 @@
         } catch(e) { notifyError('Error: ' + e.message); }
     }
 
-    // Confirm add book to group (from book modal)
     async function confirmAddBookToGroupFromBook() {
         const bookId = $('#addToGroupBookId').val();
         const groupId = $('#addGroupSelect').val();
@@ -651,13 +658,12 @@
             const data = await apiCall('GET', `/api/read-history/student/${userId}`);
             let html = '<table class="table table-sm"><thead><tr><th>Book</th><th>Last Page</th><th>Last Update</th></tr></thead><tbody>';
             data.data.forEach(h => html += `<tr><td>${escapeHtml(h.book.title)}</td> <td>${h.last_page_read}</td> <td>${h.last_update}</td> </tr>`);
-            html += '</tbody> </table>';
+            html += '</tbody> <tr>';
             showResponse('historyResponse', html);
         } catch(e) { showResponse('historyResponse', null, e.message); }
     }
 
     // ==================== PROFESSOR ====================
-    // Updated to use /api/classrooms/professor/{userId}
     async function renderStudentsTab() {
         const pane = $('#content-students');
         pane.html(`
@@ -675,7 +681,7 @@
     async function loadProfessorClassroomsAndStudents() {
         try {
             const response = await apiCall('GET', `/api/classrooms/professor/${userId}`);
-            const classrooms = response.data; // array of classrooms
+            const classrooms = response.data;
             const container = $('#studentsList').empty();
 
             if (!classrooms || classrooms.length === 0) {
@@ -686,7 +692,6 @@
             for (let i = 0; i < classrooms.length; i++) {
                 const classroom = classrooms[i];
                 const users = classroom.usersInClassroom || [];
-                // Filter out the professor (current user) and keep only users with 'stats' (students)
                 const students = users.filter(u => u.id !== userId && u.stats !== undefined);
                 const collapseId = `collapse-${classroom.id}`;
                 const headingId = `heading-${classroom.id}`;
@@ -714,7 +719,6 @@
                     studentsRow.html('<div class="col-12 text-muted">No students enrolled in this classroom.</div>');
                 } else {
                     for (const student of students) {
-                        // Get current book from stats
                         let currentBook = 'Not reading';
                         if (student.stats && student.stats.currentBook && student.stats.currentBook.book) {
                             currentBook = student.stats.currentBook.book.title;
@@ -746,7 +750,6 @@
                 container.append(classroomCard);
             }
 
-            // Attach summary button handlers after all cards are built
             $('.view-summary-btn').off('click').on('click', async function() {
                 const studentId = $(this).data('student-id');
                 const studentName = $(this).data('student-name');
@@ -827,25 +830,99 @@
     function renderLibrarianBooksTab() {
         const pane = $('#content-books');
         pane.html(`
-            <div class="card p-3"><h4>➕ Add Book</h4><div class="mb-2"><label>Title</label><input type="text" id="librarianTitle" class="form-control"></div><div class="mb-2"><label>Synopsis</label><textarea id="librarianSynopsis" class="form-control"></textarea></div><div class="mb-2"><label>Pages</label><input type="number" id="librarianPages" class="form-control"></div><div class="mb-2"><label>Release Date</label><input type="date" id="librarianRelease" class="form-control"></div><div class="mb-2"><label>Authors (comma)</label><input id="librarianAuthors" class="form-control"></div><div class="mb-2"><label>Genres (comma)</label><input id="librarianGenres" class="form-control"></div><div class="form-check mb-2"><input type="checkbox" id="librarianConfirmed"><label class="form-check-label">Confirm duplicate title</label></div><button class="btn btn-primary" id="addBookBtn">Add Book</button><div id="librarianAddResponse" class="response-area mt-2"></div></div>
-            <div class="card p-3 mt-3"><h4>✏️ Update Availability</h4><div id="booksAvailabilityList" class="mt-2"></div><div id="availabilityResponse" class="response-area mt-2"></div></div>
-            <div class="card p-3 mt-3"><h4>📖 List Books</h4><button class="btn btn-secondary" id="listAllBooksBtn">Load</button><div id="allBooksResponse" class="response-area mt-2"></div></div>
+            <div class="card p-3"><h4>➕ Add Book</h4>
+            <div class="mb-2"><label>Title</label><input type="text" id="librarianTitle" class="form-control"></div>
+            <div class="mb-2"><label>Synopsis</label><textarea id="librarianSynopsis" class="form-control"></textarea></div>
+            <div class="mb-2"><label>Pages</label><input type="number" id="librarianPages" class="form-control"></div>
+            <div class="mb-2"><label>Release Date</label><input type="date" id="librarianRelease" class="form-control"></div>
+            <div class="mb-2"><label>Authors (comma)</label><input id="librarianAuthors" class="form-control"></div>
+            <div class="mb-2"><label>Genres (comma)</label><input id="librarianGenres" class="form-control"></div>
+            <div class="form-check mb-2"><input type="checkbox" id="librarianConfirmed"><label class="form-check-label">Confirm duplicate title</label></div>
+            <button class="btn btn-primary" id="addBookBtn">Add Book</button>
+            <div id="librarianAddResponse" class="response-area mt-2"></div>
+            </div>
+
+            <div class="card p-3 mt-3" id="uploadImageCard" style="display:none;">
+                <h4>📸 Upload Book Cover</h4>
+                <input type="file" id="bookImageFile" class="form-control" accept="image/*">
+                <button class="btn btn-success mt-2" id="uploadImageBtn">Upload Image</button>
+                <div id="imageUploadResponse" class="response-area mt-2"></div>
+                <div id="imagePreview" class="mt-2"></div>
+            </div>
+
+            <div class="card p-3 mt-3"><h4>✏️ Update Availability</h4>
+            <div id="booksAvailabilityList" class="mt-2"></div>
+            <div id="availabilityResponse" class="response-area mt-2"></div></div>
+
+            <div class="card p-3 mt-3"><h4>📖 List Books</h4>
+            <button class="btn btn-secondary" id="listAllBooksBtn">Load</button>
+            <div id="allBooksResponse" class="response-area mt-2"></div></div>
         `);
         $('#addBookBtn').off('click').on('click', addBookByLibrarian);
+        $('#uploadImageBtn').off('click').on('click', uploadBookImage);
         $('#listAllBooksBtn').off('click').on('click', listAllBooks);
         loadBooksForAvailability();
     }
+
     async function addBookByLibrarian() {
-        const title = $('#librarianTitle').val(), synopsis = $('#librarianSynopsis').val(), pages = parseInt($('#librarianPages').val()), releasedAt = $('#librarianRelease').val();
+        const title = $('#librarianTitle').val();
+        const synopsis = $('#librarianSynopsis').val();
+        const pages = parseInt($('#librarianPages').val());
+        const releasedAt = $('#librarianRelease').val();
         const authors = $('#librarianAuthors').val().split(',').filter(s=>s.trim()).map(s=>({name:s.trim()}));
         const genres = $('#librarianGenres').val().split(',').filter(s=>s.trim()).map(s=>({name:s.trim()}));
         const confirmed = $('#librarianConfirmed').is(':checked');
+
         try {
-            await apiCall('POST', '/api/books', { book: { title, synopsis, authors, genres, pages, releasedAt }, confirmed });
-            showResponse('librarianAddResponse', '<span class="text-success">Book added!</span>');
-            loadBooksForAvailability();
-        } catch(e) { showResponse('librarianAddResponse', null, e.message); }
+            const response = await apiCall('POST', '/api/books', {
+                book: { title, synopsis, authors, genres, pages, releasedAt },
+                confirmed
+            });
+            const createdBook = response.data;
+            lastCreatedBookId = createdBook.id;
+            showResponse('librarianAddResponse', `<span class="text-success">Book added! ID: ${lastCreatedBookId}</span>`);
+            $('#uploadImageCard').show();
+            $('#bookImageFile').val('');
+            $('#imagePreview').html('');
+            $('#imageUploadResponse').html('');
+        } catch(e) {
+            showResponse('librarianAddResponse', null, e.message);
+        }
     }
+
+    async function uploadBookImage() {
+        const fileInput = document.getElementById('bookImageFile');
+        const file = fileInput.files[0];
+        if (!file) {
+            notifyWarning('Please select an image file.');
+            return;
+        }
+        if (!lastCreatedBookId) {
+            notifyWarning('No book was created yet. Please add a book first.');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`/api/books/${lastCreatedBookId}/image`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${authToken}` },
+                body: formData
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Upload failed');
+            notifySuccess('Image uploaded successfully!');
+            const imageUrl = data.data.imagePath;
+            if (imageUrl) {
+                const previewUrl = getBookImageUrl(imageUrl);
+                $('#imagePreview').html(`<img src="${previewUrl}" style="max-height: 150px; border-radius: 8px;" onerror="this.onerror=null;this.src='https://via.placeholder.com/150x150?text=Error';"><br><small>${imageUrl}</small>`);
+            }
+        } catch(e) {
+            notifyError('Image upload error: ' + e.message);
+        }
+    }
+
     async function loadBooksForAvailability() {
         try {
             const books = (await apiCall('GET', '/api/books/')).data || [];
@@ -856,6 +933,7 @@
             $('.toggle-availability').off('click').on('click', function() { updateBookAvailability($(this).data('id'), !($(this).data('available') === 'true')); });
         } catch(e) { console.error(e); }
     }
+
     async function updateBookAvailability(id, available) {
         try {
             await apiCall('PATCH', `/api/books/${id}/available?available=${available}`);
@@ -865,11 +943,21 @@
             showResponse('availabilityResponse', null, e.message);
         }
     }
+
     async function listAllBooks() {
         try {
             const books = (await apiCall('GET', '/api/books/')).data || [];
-            let html = '<table class="table table-sm"><thead><tr><th>Title</th><th>Available</th><th>Quantity</th></tr></thead><tbody>';
-            books.forEach(b => html += `<tr><td>${escapeHtml(b.title)}</td><td>${b.available ? 'Yes' : 'No'}</td><td>${b.quantity}</td></tr>`);
+            let html = '<table class="table table-sm"><thead><tr><th>Cover</th><th>Title</th><th>Available</th><th>Quantity</th></tr></thead><tbody>';
+            books.forEach(b => {
+                const coverUrl = getBookImageUrl(b.imagePath);
+                const coverHtml = `<img src="${coverUrl}" style="height: 40px; width: auto;" onerror="this.onerror=null;this.src='https://via.placeholder.com/40?text=No';">`;
+                html += `<tr>
+                    <td>${coverHtml} Normally
+                    <td>${escapeHtml(b.title)} Normally
+                    <td>${b.available ? 'Yes' : 'No'} Normally
+                    <td>${b.quantity} Normally
+                </tr>`;
+            });
             html += '</tbody></table>';
             showResponse('allBooksResponse', html);
         } catch(e) { showResponse('allBooksResponse', null, e.message); }

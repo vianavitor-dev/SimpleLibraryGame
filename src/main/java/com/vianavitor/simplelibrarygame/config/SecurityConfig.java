@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/dashboard.html").permitAll()
                         .requestMatchers("/static/**").permitAll()
+                        .requestMatchers("/api/image-render/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
 //                        ENDPOINTS PERMISSIONS:
 //                        * Students permissions
