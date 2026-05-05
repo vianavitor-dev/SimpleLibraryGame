@@ -1,31 +1,33 @@
 package com.vianavitor.simplelibrarygame.controller.aux;
 
+import com.vianavitor.simplelibrarygame.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
 
 @RestController
 @RequestMapping("/api/image-render")
 public class ImageRender {
     @GetMapping(value = "/path")
-    @ResponseBody
-//    TODO: make it works to external images
-    public ResponseEntity<InputStreamResource> render(@RequestParam String path, HttpServletRequest req) {
+    public ResponseEntity<Resource> render(@RequestParam String path, HttpServletRequest req) throws MalformedURLException {
         String extension = path.split("[.]")[1];
         MediaType type = extension.equals("png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
 
-        InputStream in = getClass().getResourceAsStream("/static/images/3.png");
+        Resource resource = new UrlResource(Path.of(path).toUri());
 
-        if (in == null) {
-            throw new NullPointerException("InputStream (in) cannot be null");
+        if (!resource.exists() || !resource.isReadable()) {
+            throw new ResourceNotFoundException("image is not readable or does not exists");
         }
 
         return ResponseEntity.ok()
                 .contentType(type)
-                .body(new InputStreamResource(in));
+                .body(resource);
     }
 }
