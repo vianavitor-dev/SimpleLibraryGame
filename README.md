@@ -31,7 +31,7 @@ To achieve this, the platform introduces **game-like mechanics**, allowing stude
 The system supports four types of users:
 
 - **Student**
-- **Teacher**
+- **Teacher (Professor)**
 - **Librarian**
 - **Administrator**
 
@@ -43,78 +43,64 @@ Each role has specific responsibilities and permissions.
 
 ## 👨‍🎓 Student
 
-The **student** is the primary user of the platform and has access to most features.
+The **student** is the primary user of the platform.
 
-- Register (using a class code)
-- Login
-- View personal statistics:
-  - Level
-  - Average reading time
-  - Last book read
-  - Reading streak
-- Search for books
-- Start a reading session
-- Finish a reading session
-- Submit a summary of the pages read
-- Create reading groups
-- Rename or remove groups
-- Add books to a group
+- **Registration** – Students can register using a classroom code and select their favorite genres.
+- **Login** – Secure authentication using JWT.
+- **Personal statistics** – View level, current XP, reading streak, average reading time, and number of books read.
+- **Book browsing** – Search for books by title, author, or genre. Each book displays its cover image, rating, and availability.
+- **Reading session** – Start a timed reading session (with pause/cancel). When finished, the student enters the last page read and submits a summary. XP is awarded based on the number of lines in the summary (max 30 XP per session).
+- **Book rating** – Rate books from 1 to 5 stars.
+- **Reading groups** – Create groups, view your groups, and add books to them.
+- **View summaries** – See all summaries you have submitted.
+- **Reading history** – Track your past reading sessions.
 
 ---
 
-## 👨‍🏫 Teacher
+## 👨‍🏫 Teacher (Professor)
 
-Teachers are responsible for **monitoring students from their class**.
+Teachers can monitor the students in their assigned classrooms.
 
-- Login
-- View the list of students in their class
-- Access student information such as:
-  - Level
-  - Average reading time
-  - Last book read
-  - Last submitted summary
+- **Login** – Role-based access.
+- **Classroom overview** – See all classrooms the teacher belongs to, with a collapsible list of students in each.
+- **Student information** – For each student, view:
+  - Last login date
+  - Current book being read
+  - Last submitted summary (popup modal)
+- **Other tools** – Search summaries by book ID and view individual student stats by ID.
 
 ---
 
 ## 📚 Librarian
 
-The librarian is responsible for **book management**.
+The librarian manages the book catalog.
 
-- Login
-- Manage the book catalog:
-  - Add books
-  - Remove books
-  - Update book information
-  - List available books
+- **Login** – Role-based access.
+- **Add books** – Enter title, synopsis, pages, release date, authors, and genres. Confirmation option to bypass duplicate title warnings.
+- **Upload book covers** – After adding a book, the librarian can upload a cover image. Images are rendered via a dedicated image endpoint.
+- **Update availability** – Toggle a book’s availability (available/unavailable) directly from a list.
+- **List all books** – View the entire collection with cover thumbnails, titles, availability, and quantity.
+- **Author management** – Add new authors and list existing ones.
 
 ---
 
 ## 🛠 Administrator
 
-The administrator manages **users and classes** within the system.
+The administrator manages users and classrooms.
 
-- Register new users
-- Login
-- Manage classes:
-  - Create classes
-  - List classes
-  - Update class information
-  - View class details
-- Generate **expiring registration links** for new users (teachers or librarians)
+- **Login** – Role-based access.
+- **Register users** – Create new professors, librarians, and administrators (with optional classroom code for professors).
+- **Classroom management**:
+  - Create classrooms (auto‑generates a unique public code).
+  - List all classrooms with options to show users, edit name, delete, and copy the public code.
+  - Replace the set of users in a classroom (bulk assign/unassign).
+- **No AI invite links yet** – Future feature.
 
 ---
 
-# 🧠 AI Integration
+# 🧠 AI Integration (Planned)
 
-The platform uses **Artificial Intelligence** to classify the **difficulty level of books**.
-
-The AI analyzes the book content and categorizes it into one of three levels:
-
-- **Easy**
-- **Medium**
-- **Hard**
-
-This classification helps students choose books appropriate for their reading level and allows teachers to better guide student reading development.
+The platform will use **Artificial Intelligence** to classify the **difficulty level of books** (Easy, Medium, Hard). This feature is not yet implemented but is a priority for future releases.
 
 ---
 
@@ -122,7 +108,27 @@ This classification helps students choose books appropriate for their reading le
 
 | Layer | Technology |
 |------|-------------|
-| **Backend** | Java, Spring Framework |
-| **Frontend** | HTML, CSS, JavaScript |
+| **Backend** | Java 21, Spring Boot, Spring Security, JWT, Spring Data JPA, Hibernate |
+| **Frontend** | HTML5, Bootstrap 5, JavaScript + jQuery (JWT decoding, dynamic tabs, modals) |
 | **Database** | MySQL |
-| **Infrastructure** | Docker |
+| **Infrastructure** | Docker (containerized deployment) |
+
+---
+
+# 🔮 Future Features
+
+- **AI book difficulty classification** – Use NLP to automatically analyse book content and suggest a difficulty level.
+- **Expiring registration links** – Allow administrators to generate time‑limited links for teachers or librarians to self‑register.
+- **Leaderboards** – Compare students’ reading streaks and XP within a classroom.
+- **Rewards and achievements** – Unlock badges for reaching reading milestones.
+- **Mobile‑friendly version** – Optimize the frontend for smartphones and tablets.
+- **Detailed analytics** – Graphs and reports for teachers to track class progress over time.
+- **Book recommendations** – Based on favourite genres and past reading.
+
+---
+
+## 📦 Running the Project
+
+The entire stack (backend, frontend, MySQL) can be run inside Docker containers. The frontend is served as static HTML from the Spring Boot application, and all API endpoints are secured with JWT.
+
+For development, you can run the Spring Boot application locally and access the dashboard at `http://localhost:8080/dashboard.html`.
