@@ -1,12 +1,9 @@
-package com.vianavitor.simplelibrarygame.controller.auth;
+package com.vianavitor.simplelibrarygame.controller.aux;
 
-import com.vianavitor.simplelibrarygame.dto.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.constraints.NotEmpty;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.InputStream;
