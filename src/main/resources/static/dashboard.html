@@ -1068,10 +1068,39 @@
             });
             $('.copy-code').off('click').on('click', function() {
                 const code = $(this).data('code');
-                navigator.clipboard.writeText(code).then(() => notifySuccess('Classroom code copied to clipboard!'));
+                copyToClipboard(code);
             });
             $('#confirmEditClassNameBtn').off('click').on('click', changeClassName);
         } catch(e) { console.error(e); }
+    }
+    function copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                notifySuccess('Classroom code copied to clipboard!');
+            }).catch(err => {
+                console.warn('Clipboard API failed, using fallback.', err);
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+    function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.top = '-9999px';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, text.length);
+        const success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (success) {
+            notifySuccess('Classroom code copied to clipboard!');
+        } else {
+            notifyError('Failed to copy. Please copy manually.');
+        }
     }
     async function showClassroomUsers(id, name) {
         try {
