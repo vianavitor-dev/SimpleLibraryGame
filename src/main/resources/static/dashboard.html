@@ -691,8 +691,9 @@
 
             for (let i = 0; i < classrooms.length; i++) {
                 const classroom = classrooms[i];
-                const users = classroom.usersInClassroom || [];
-                const students = users.filter(u => u.id !== userId && u.stats !== undefined);
+                const users = classroom.users || [];          // ← changed from usersInClassroom to users
+                const students = users.filter(u => u.isProfessor === false);  // ← filter by isProfessor flag
+
                 const collapseId = `collapse-${classroom.id}`;
                 const headingId = `heading-${classroom.id}`;
 
@@ -719,13 +720,8 @@
                     studentsRow.html('<div class="col-12 text-muted">No students enrolled in this classroom.</div>');
                 } else {
                     for (const student of students) {
-                        let currentBook = 'Not reading';
-                        if (student.stats && student.stats.currentBook && student.stats.currentBook.book) {
-                            currentBook = student.stats.currentBook.book.title;
-                        } else if (student.stats && student.stats.currentBook && student.stats.currentBook.title) {
-                            currentBook = student.stats.currentBook.title;
-                        }
                         const lastLogin = student.lastLogin || 'Never';
+                        const currentBook = (student.currentBook && student.currentBook.title) ? student.currentBook.title : 'Not reading';
                         const studentCard = $(`
                             <div class="col-md-6 col-lg-4 mb-3">
                                 <div class="card h-100">
@@ -750,6 +746,7 @@
                 container.append(classroomCard);
             }
 
+            // Attach summary button handlers after all cards are built
             $('.view-summary-btn').off('click').on('click', async function() {
                 const studentId = $(this).data('student-id');
                 const studentName = $(this).data('student-name');
