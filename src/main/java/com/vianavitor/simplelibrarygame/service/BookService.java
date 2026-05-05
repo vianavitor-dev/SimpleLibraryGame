@@ -104,11 +104,11 @@ public class BookService {
         Book book = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("not found book"));
 
-        File absolutePath = new File(imagePath + "/");
+        File absolutePath = new File(imagePath);
         File destination = getFile(file, absolutePath, book);
         file.transferTo(destination);
 
-        System.out.println(destination.getAbsolutePath());
+//        System.out.println(destination.getAbsolutePath());
 
         book.setImagePath(destination.getAbsolutePath());
         return repository.save(book);
@@ -138,7 +138,7 @@ public class BookService {
                 throw new UnsupportedFileTypeException("unsupported image type: " + extension);
         }
 
-        return new File(directory + book.getId().toString() + "." + extension);
+        return new File(directory + "/" + book.getId().toString() + "." + extension);
     }
 
     public void rate(Long id, int rate) throws ResourceNotFoundException{
