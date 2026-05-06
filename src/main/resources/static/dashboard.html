@@ -351,6 +351,7 @@
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <button class="btn btn-primary" id="refreshStatsBtn"><i class="bi bi-arrow-clockwise me-1"></i> Refresh stats</button>
                 </div>
+                <div id="levelProgression" class="mb-3"></div>
                 <div id="statsResponse" class="response-area"></div>
             </div>
         `);
@@ -364,24 +365,32 @@
         try {
             const s = (await apiCall('GET', `/api/stats/${userId}`)).data;
             const percent = (s.currentExperience / s.maxLvlExperience) * 100;
-            const progressBar = `
-                <div class="mt-3">
-                    <strong>Level ${s.level} progress:</strong> ${s.currentExperience} / ${s.maxLvlExperience} XP
-                    <div class="progress mt-1" style="height: 20px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: ${percent}%;" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">${Math.round(percent)}%</div>
+
+            const progressHtml = `
+                <div class="card p-3">
+                    <h5><i class="bi bi-graph-up"></i> Level Progression</h5>
+                    <strong>Level ${s.level}</strong><br>
+                    <div class="progress mt-2" style="height: 25px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: ${percent}%;" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">
+                            ${Math.round(percent)}%
+                        </div>
                     </div>
+                    <small class="text-muted">${s.currentExperience} / ${s.maxLvlExperience} XP to next level</small>
                 </div>
             `;
-            const html = `
+
+            const statsHtml = `
                 <strong>Level:</strong> ${s.level}<br>
                 <strong>XP:</strong> ${s.currentExperience} / ${s.maxLvlExperience}<br>
                 <strong>Avg Reading Time:</strong> ${s.averageReadingTime} min<br>
                 <strong>Books Read:</strong> ${s.readingCount}<br>
-                ${progressBar}
             `;
-            showResponse('statsResponse', html);
+
+            $('#levelProgression').html(progressHtml);
+            showResponse('statsResponse', statsHtml);
         } catch(e) {
             showResponse('statsResponse', null, e.message);
+            $('#levelProgression').html('<div class="alert alert-danger">Failed to load progression</div>');
         }
     }
     async function updateStreak() {
