@@ -539,20 +539,37 @@
         const lastPage = $('#finishLastPage').val();
         const summaryText = $('#finishSummary').val();
         if (!lastPage || !summaryText) { notifyWarning('Please fill last page and summary.'); return; }
+
         const lines = summaryText.split(/\r?\n/).length;
         let exp = Math.min(lines * 2, 30);
+        // Calculate reading time in minutes (readingSeconds is global)
+        const readingMinutes = Math.ceil(readingSeconds / 60);
+
         try {
+            // 1. Submit summary
             await apiCall('POST', '/api/summaries', { text: summaryText, bookId: parseInt(bookId), studentId: userId });
+
+            // 2. Update current book and last page
             await apiCall('POST', '/api/stats/set-current-book', { userId, bookId: parseInt(bookId), page: parseInt(lastPage) });
+
+            // 3. Add experience points
             await apiCall('POST', `/api/stats/${userId}/add-exp`, { exp });
-            notifySuccess(`Session finished! You earned ${exp} XP.`);
+
+            // 4. Update average reading time (statsId = userId)
+            await apiCall('POST', `/api/stats/${userId}/average-reading-time`, { readingTimeInMins: readingMinutes });
+
+            notifySuccess(`Session finished! You earned ${exp} XP. Average reading time updated.`);
+
+            // Clean up timer and UI
             if (readingTimerInterval) clearInterval(readingTimerInterval);
             readingActive = false;
             readingSeconds = 0;
             currentReadingBookId = null;
             $('#finishReadingModal').modal('hide');
             $('#bookDetailModal').modal('hide');
-        } catch(e) { notifyError('Error finishing session: ' + e.message); }
+        } catch(e) {
+            notifyError('Error finishing session: ' + e.message);
+        }
     }
 
     // Groups tab - with add book button per group
