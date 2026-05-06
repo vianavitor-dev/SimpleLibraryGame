@@ -286,7 +286,7 @@
 
     // ==================== DASHBOARD LOADER ====================
     function loadDashboard() {
-        const tabs = { student: ['profile','books','groups','summaries','history'], professor: ['students','summaries','stats'], librarian: ['books','authors'], adm: ['users','classrooms'] }[currentRole] || [];
+        const tabs = { student: ['profile','books','groups','summaries','history'], professor: ['students','stats'], librarian: ['books','authors'], adm: ['users','classrooms'] }[currentRole] || [];
         const labels = { profile:'Profile & Stats', books:'Books & Reading', groups:'Reading Groups', summaries:'My Summaries', history:'Reading History', students:'Students', stats:'Statistics', users:'Manage Users', classrooms:'Manage Classes', authors:'Authors' };
         const icons = { profile:'person', books:'book', groups:'people', summaries:'journal-text', history:'clock-history', students:'people', stats:'graph-up', users:'person-badge', classrooms:'building', authors:'pen' };
         const tabsContainer = $('#dashboardTabs').empty();
@@ -326,7 +326,7 @@
         });
         // Render all tabs immediately
         if (currentRole === 'student') { renderProfileTab(); renderBooksTab(); renderGroupsTab(); renderSummariesTab(); renderHistoryTab(); }
-        else if (currentRole === 'professor') { renderStudentsTab(); renderProfSummariesTab(); renderProfStatsTab(); }
+        else if (currentRole === 'professor') { renderStudentsTab(); renderProfStatsTab(); }
         else if (currentRole === 'librarian') { renderLibrarianBooksTab(); renderAuthorsTab(); }
         else if (currentRole === 'adm') { renderAdminUsersTab(); renderAdminClassroomsTab(); }
     }
@@ -340,7 +340,7 @@
                     <div>
                         <div class="section-eyebrow">Student overview</div>
                         <h4 class="mb-1"><i class="bi bi-bar-chart"></i> My Stats</h4>
-                        <p class="section-note">Check your progress and keep your reading streak active.</p>
+                        <p class="section-note">Check your progress.</p>
                     </div>
                     <div class="quick-action-grid">
                         <button class="btn btn-outline-primary" id="goBooksBtn"><i class="bi bi-book me-1"></i> Books</button>
@@ -350,23 +350,39 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <button class="btn btn-primary" id="refreshStatsBtn"><i class="bi bi-arrow-clockwise me-1"></i> Refresh stats</button>
-                    <button class="btn btn-warning" id="updateStreakBtn"><i class="bi bi-fire me-1"></i> Update streak</button>
                 </div>
                 <div id="statsResponse" class="response-area"></div>
-                <hr class="my-4">
-                <h4 class="mb-2"><i class="bi bi-fire"></i> Reading Streak</h4>
-                <div id="streakResponse" class="response-area mt-2"></div>
-            </div>`);
+            </div>
+        `);
         $('#refreshStatsBtn').off('click').on('click', fetchStudentStats);
-        $('#updateStreakBtn').off('click').on('click', updateStreak);
         $('#goBooksBtn').off('click').on('click', () => $('#tab-books').trigger('click'));
         $('#goGroupsBtn').off('click').on('click', () => $('#tab-groups').trigger('click'));
         $('#goSummariesBtn').off('click').on('click', () => $('#tab-summaries').trigger('click'));
         fetchStudentStats();
     }
     async function fetchStudentStats() {
-        try { const s = (await apiCall('GET', `/api/stats/${userId}`)).data; showResponse('statsResponse', `<strong>Level:</strong> ${s.level}<br><strong>XP:</strong> ${s.currentExperience}/${s.maxLvlExperience}<br><strong>Streak:</strong> ${s.ongoingStreak}<br><strong>Avg Reading Time:</strong> ${s.averageReadingTime} min<br><strong>Books Read:</strong> ${s.readingCount}`); }
-        catch(e) { showResponse('statsResponse', null, e.message); }
+        try {
+            const s = (await apiCall('GET', `/api/stats/${userId}`)).data;
+            const percent = (s.currentExperience / s.maxLvlExperience) * 100;
+            const progressBar = `
+                <div class="mt-3">
+                    <strong>Level ${s.level} progress:</strong> ${s.currentExperience} / ${s.maxLvlExperience} XP
+                    <div class="progress mt-1" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: ${percent}%;" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">${Math.round(percent)}%</div>
+                    </div>
+                </div>
+            `;
+            const html = `
+                <strong>Level:</strong> ${s.level}<br>
+                <strong>XP:</strong> ${s.currentExperience} / ${s.maxLvlExperience}<br>
+                <strong>Avg Reading Time:</strong> ${s.averageReadingTime} min<br>
+                <strong>Books Read:</strong> ${s.readingCount}<br>
+                ${progressBar}
+            `;
+            showResponse('statsResponse', html);
+        } catch(e) {
+            showResponse('statsResponse', null, e.message);
+        }
     }
     async function updateStreak() {
         try { const data = await apiCall('POST', `/api/stats/${userId}/streak`); showResponse('streakResponse', `<span class="text-success">Streak updated: ${data.data}</span>`); }
@@ -809,11 +825,6 @@
         }
     }
 
-    function renderProfSummariesTab() {
-        const pane = $('#content-summaries');
-        pane.html(`<div class="card p-3"><h4>Summaries by Book</h4><label>Book ID</label><input type="number" id="profBookId" class="form-control"><button class="btn btn-primary mt-2" id="profLoadSummariesBtn">Load</button><div id="profSummaries" class="response-area mt-2"></div></div>`);
-        $('#profLoadSummariesBtn').off('click').on('click', fetchSummariesByBook);
-    }
     async function fetchSummariesByBook() {
         const bookId = $('#profBookId').val();
         if (!bookId) return;
